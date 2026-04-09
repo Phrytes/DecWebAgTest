@@ -633,7 +633,10 @@ const skillsMeta = {
 let myClient = null, myAddress = null;
 
 function initNKN() {
-  myClient = new nkn.Client({ seedRpcServerAddr: 'https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet' });
+  myClient = new nkn.Client({
+    seedRpcServerAddr: 'https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet',
+    connectRetries: 10,
+  });
 
   myClient.on('connect', () => {
     myAddress = myClient.addr;
