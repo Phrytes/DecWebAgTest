@@ -115,7 +115,22 @@
   <div class="spacer"></div>
   <span id="group-badge" class="group-badge" style="display:none"></span>
   <div class="addr-chip" id="my-addr" onclick="copyAddr()">—</div>
+  <button class="btn ghost" id="qr-btn" onclick="showQR()" disabled
+          style="width:auto;padding:4px 12px;font-size:12px;border-radius:20px">QR</button>
 </header>
+
+<!-- QR modal -->
+<div id="qr-modal" onclick="hideQR()"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center">
+  <div onclick="event.stopPropagation()"
+       style="background:var(--surf);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;max-width:280px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px">Scan to connect</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Opens this page on the other device and auto-connects</div>
+    <canvas id="qr-canvas"></canvas>
+    <div style="margin-top:14px;font-size:10px;color:var(--muted);word-break:break-all;font-family:monospace" id="qr-url"></div>
+    <div style="margin-top:12px;font-size:11px;color:var(--muted)">tap outside to close</div>
+  </div>
+</div>
 
 <div class="body">
 
@@ -196,11 +211,26 @@
 <div id="toast"></div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
 // Agent profiles
 // Each profile = a "mini app" with its own skills and acceptance policy.
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ICE servers — STUN for discovery + TURN for relay through mobile/CGNAT
+// openrelay.metered.ca is a free public TURN service (test/PoC use only)
+// ─────────────────────────────────────────────────────────────────────────────
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:openrelay.metered.ca:80'  },
+  { urls: 'turn:openrelay.metered.ca:80',                username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:80?transport=tcp',  username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443',               username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+];
 
 let notesStore = [];
 const BOOT_TIME = Date.now();
@@ -332,10 +362,7 @@ function evaluatePolicy(policy, fromId, task) {
 
 function start() {
   const savedId = localStorage.getItem('demo_agent_id');
-  const opts    = { config: { iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-  ]}};
+  const opts    = { config: { iceServers: ICE_SERVERS } };
   peer = savedId ? new Peer(savedId, opts) : new Peer(opts);
 
   peer.on('open', (id) => {
@@ -344,6 +371,7 @@ function start() {
     document.getElementById('dot').className = 'dot ready';
     document.getElementById('my-addr').textContent = id.slice(0,8)+'…'+id.slice(-6);
     document.getElementById('my-id-display').textContent = id;
+    document.getElementById('qr-btn').disabled = false;
     log('sys', `Ready as "${activeProfile.name}" (${id.slice(0,20)}…)`);
   });
 
@@ -658,6 +686,7 @@ function applyCustomId() {
   document.getElementById('my-addr').textContent = '—';
   document.getElementById('my-id-display').textContent = '—';
   document.getElementById('custom-id-input').value = '';
+  document.getElementById('qr-btn').disabled = true;
 
   renderPeers();
   updateTargetDropdown();
@@ -829,11 +858,44 @@ function copyAddr() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// QR code share
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function showQR() {
+  if (!myAddress) return;
+  const url = `${location.origin}${location.pathname}?connect=${myAddress}`;
+  document.getElementById('qr-url').textContent = url;
+  const modal = document.getElementById('qr-modal');
+  modal.style.display = 'flex';
+  await QRCode.toCanvas(document.getElementById('qr-canvas'), url, { width: 200, margin: 1, color: { dark: '#e2e4ed', light: '#13151e' } });
+}
+
+function hideQR() {
+  document.getElementById('qr-modal').style.display = 'none';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auto-connect via URL param  ?connect=PEER_ID
+// ─────────────────────────────────────────────────────────────────────────────
+
+function checkAutoConnect() {
+  const id = new URLSearchParams(location.search).get('connect');
+  if (!id) return;
+  log('sys', `Auto-connect from URL: ${id.slice(0,16)}…`);
+  document.getElementById('connect-input').value = id;
+  // Wait until peer is ready, then connect
+  const poll = setInterval(() => {
+    if (peer?.open) { clearInterval(poll); connectPeer(); }
+  }, 300);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Boot
 // ─────────────────────────────────────────────────────────────────────────────
 
 renderAll();
 start();
+checkAutoConnect();
 </script>
 </body>
 </html>
