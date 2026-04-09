@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Network Explorer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --border:   #2a2d3a;
+      --accent:   #6c63ff;
+      --accent2:  #00d4aa;
+      --text:     #e2e4ed;
+      --muted:    #7a7d8e;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --yellow:   #f59e0b;
+      --radius:   10px;
+      --font:     'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      grid-template-columns: 300px 1fr;
+      grid-template-areas: "header header" "sidebar main";
+    }
+
+    /* ── Header ── */
+    header {
+      grid-area: header;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 20px;
+    }
+    header h1 { font-size: 16px; font-weight: 600; letter-spacing: .3px; }
+    header h1 span { color: var(--accent); }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0;
+      transition: background .3s;
+    }
+    .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.connecting { background: var(--yellow); animation: pulse 1s infinite; }
+    #status-label { color: var(--muted); font-size: 12px; }
+    header .spacer { flex: 1; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── Sidebar ── */
+    aside {
+      grid-area: sidebar;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .section {
+      border-bottom: 1px solid var(--border);
+      padding: 16px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .address-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--accent2);
+      word-break: break-all;
+      cursor: pointer;
+      transition: border-color .2s;
+      position: relative;
+    }
+    .address-box:hover { border-color: var(--accent2); }
+    .address-box .copy-hint {
+      display: block;
+      font-family: var(--font);
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Agent card */
+    .card-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+    .card-row .label { color: var(--muted); }
+    .card-row .value { color: var(--text); font-weight: 500; }
+
+    .skill-pill {
+      display: inline-block;
+      background: rgba(108,99,255,.15);
+      border: 1px solid rgba(108,99,255,.3);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      margin: 2px;
+    }
+
+    /* Connected agents */
+    .agent-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .agent-item:hover, .agent-item.active { border-color: var(--accent); }
+    .agent-item .agent-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+    .agent-item .agent-addr { font-family: monospace; font-size: 10px; color: var(--muted); word-break: break-all; }
+    .agent-item .agent-skills { margin-top: 6px; }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-size: 13px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      width: 100%;
+      font-weight: 500;
+    }
+    .btn:hover { opacity: .85; }
+    .btn:active { transform: scale(.98); }
+    .btn.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn.small { padding: 5px 10px; font-size: 12px; width: auto; }
+    .btn.danger { background: var(--red); }
+
+    input, textarea, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 12px;
+      width: 100%;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
+    label:first-child { margin-top: 0; }
+    textarea { resize: vertical; min-height: 80px; font-family: monospace; font-size: 12px; }
+
+    /* ── Main ── */
+    main {
+      grid-area: main;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      background: var(--surface);
+    }
+    .tab {
+      padding: 14px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+      user-select: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: none;
+    }
+    .tab-content.active { display: block; }
+
+    /* ── Task pane ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    /* Task history */
+    .task-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .task-skill { font-weight: 600; font-size: 13px; }
+    .task-direction { color: var(--muted); font-size: 11px; }
+    .badge {
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.submitted  { background: rgba(245,158,11,.15); color: var(--yellow); }
+    .badge.working    { background: rgba(108,99,255,.15);  color: var(--accent); }
+    .badge.completed  { background: rgba(34,197,94,.15);   color: var(--green); }
+    .badge.failed     { background: rgba(239,68,68,.15);   color: var(--red); }
+
+    .task-detail { color: var(--muted); font-family: monospace; font-size: 11px; word-break: break-all; }
+    .task-result { color: var(--accent2); font-family: monospace; font-size: 11px; margin-top: 4px; word-break: break-all; }
+
+    /* ── Log tab ── */
+    #log-output {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      min-height: 400px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-line { margin-bottom: 4px; line-height: 1.5; }
+    .log-in    { color: var(--accent2); }
+    .log-out   { color: var(--accent); }
+    .log-sys   { color: var(--muted); }
+    .log-err   { color: var(--red); }
+
+    /* ── Capabilities tab ── */
+    .cap-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .cap-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .cap-id { font-family: monospace; font-weight: 600; color: var(--accent2); }
+    .cap-name { color: var(--text); font-weight: 500; }
+    .cap-desc { color: var(--muted); font-size: 12px; }
+    .cap-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #a0aec0;
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 20px;
+      font-size: 13px;
+    }
+
+    .connect-form { display: flex; flex-direction: column; gap: 8px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="status-dot connecting" id="status-dot"></div>
+  <h1>Agent Network <span>Explorer</span></h1>
+  <span id="status-label">Connecting to NKN…</span>
+  <div class="spacer"></div>
+</header>
+
+<!-- ── Sidebar ── -->
+<aside>
+
+  <div class="section">
+    <div class="section-title">My Agent</div>
+    <div class="address-box" id="my-address" onclick="copyAddress()" title="Click to copy">
+      Connecting…
+      <span class="copy-hint">Click to copy address</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Agent Card</div>
+    <div class="card-row"><span class="label">Name</span><span class="value" id="card-name">—</span></div>
+    <div class="card-row"><span class="label">Version</span><span class="value">1.0</span></div>
+    <div style="margin-top:8px; font-size:11px; color:var(--muted); margin-bottom:4px;">Skills</div>
+    <div id="card-skills"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Connect to Agent</div>
+    <div class="connect-form">
+      <input id="remote-addr" placeholder="Paste NKN address…" />
+      <input id="remote-label" placeholder="Label (optional)" />
+      <button class="btn" onclick="connectToAgent()">Connect &amp; Fetch Card</button>
+    </div>
+  </div>
+
+  <div class="section" style="flex:1">
+    <div class="section-title">Connected Agents <span id="agent-count" style="color:var(--muted)">(0)</span></div>
+    <div id="agent-list"><div class="empty-state">No agents connected yet</div></div>
+  </div>
+
+</aside>
+
+<!-- ── Main ── -->
+<main>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('tasks', this)">Tasks</div>
+    <div class="tab" onclick="switchTab('capabilities', this)">My Capabilities</div>
+    <div class="tab" onclick="switchTab('log', this)">Message Log</div>
+  </div>
+
+  <!-- Tasks tab -->
+  <div class="tab-content active" id="tab-tasks">
+    <div class="two-col">
+
+      <div class="panel">
+        <div class="panel-title">Send Task</div>
+        <label>Target Agent</label>
+        <select id="task-target">
+          <option value="">— connect an agent first —</option>
+        </select>
+        <label>Skill ID</label>
+        <input id="task-skill" placeholder="e.g. ping, echo, summarise" />
+        <label>Parameters (JSON)</label>
+        <textarea id="task-params">{ "message": "hello!" }</textarea>
+        <br/>
+        <button class="btn" onclick="sendTask()">Send Task →</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Task History</div>
+        <div id="task-history"><div class="empty-state">No tasks yet</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Capabilities tab -->
+  <div class="tab-content" id="tab-capabilities">
+    <div id="cap-list"></div>
+  </div>
+
+  <!-- Log tab -->
+  <div class="tab-content" id="tab-log">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:13px;color:var(--muted)">Raw A2A message traffic</span>
+      <button class="btn secondary small" onclick="clearLog()">Clear</button>
+    </div>
+    <div id="log-output"></div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/nkn-sdk/dist/nkn.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Core A2A implementation (mirrors the SDK, but browser-native)
+// ─────────────────────────────────────────────────────────────────────────────
+
+let myClient = null;
+let myAddress = null;
+
+const skills    = new Map();   // skillId -> { handler, meta }
+const remotes   = new Map();   // address -> { label, address, card }
+const tasks     = [];          // task history (outbound)
+const inbound   = [];          // incoming tasks
+
+// ── Pre-built demo skills ──────────────────────────────────────────────────
+
+function registerSkill(id, name, description, handler, codeSnippet) {
+  skills.set(id, { id, name, description, handler, codeSnippet });
+}
+
+registerSkill('ping', 'Ping', 'Echo back a message with a timestamp.',
+  async ({ message }) => ({ echo: message, ts: Date.now() }),
+  `async ({ message }) => ({\n  echo: message,\n  ts: Date.now()\n})`
+);
+
+registerSkill('echo', 'Echo', 'Return the exact params that were sent.',
+  async (params) => params,
+  `async (params) => params`
+);
+
+registerSkill('uppercase', 'Uppercase', 'Convert a text string to uppercase.',
+  async ({ text }) => ({ result: (text ?? '').toUpperCase() }),
+  `async ({ text }) => ({\n  result: (text ?? '').toUpperCase()\n})`
+);
+
+registerSkill('agent_card', 'Agent Card', 'Return this agent\'s A2A card.',
+  async () => buildAgentCard(),
+  `async () => buildAgentCard()`
+);
+
+// ── Agent Card ─────────────────────────────────────────────────────────────
+
+function buildAgentCard() {
+  return {
+    name:        'Browser Agent',
+    description: 'A2A agent running in the browser via NKN',
+    url:         myAddress ? `nkn://${myAddress}` : 'not-connected',
+    version:     '1.0',
+    capabilities: { streaming: false, pushNotifications: false },
+    skills: Array.from(skills.values()).map(s => ({
+      id:          s.id,
+      name:        s.name,
+      description: s.description,
+      inputModes:  ['application/json'],
+      outputModes: ['application/json'],
+    })),
+  };
+}
+
+// ── NKN setup ──────────────────────────────────────────────────────────────
+
+function init() {
+  setStatus('connecting');
+  myClient = new nkn.Client();
+
+  myClient.on('connect', () => {
+    myAddress = myClient.addr;
+    setStatus('connected');
+    updateMyCard();
+    log('sys', `Connected as ${myAddress}`);
+  });
+
+  myClient.on('message', async (msg) => {
+    const from = msg.src;
+    const raw  = msg.payload.toString();
+    log('in', `← ${shorten(from)}  ${raw.slice(0, 120)}${raw.length > 120 ? '…' : ''}`);
+
+    let message;
+    try { message = JSON.parse(raw); } catch { return; }
+
+    switch (message.type) {
+      case 'task':              return handleIncomingTask(from, message.task);
+      case 'task_update':       return handleTaskUpdate(message.task);
+      case 'agent_card_request':
+        send(from, { type: 'agent_card_response', card: buildAgentCard() });
+        break;
+      case 'agent_card_response':
+        storeRemoteCard(from, message.card);
+        break;
+    }
+  });
+}
+
+async function send(address, obj) {
+  const raw = JSON.stringify(obj);
+  log('out', `→ ${shorten(address)}  ${raw.slice(0, 120)}${raw.length > 120 ? '…' : ''}`);
+  await myClient.send(address, raw);
+}
+
+// ── Incoming tasks ─────────────────────────────────────────────────────────
+
+async function handleIncomingTask(from, taskData) {
+  const skill = skills.get(taskData.skill);
+
+  const reply = (state, extra = {}) =>
+    send(from, { type: 'task_update', task: { ...taskData, state, ...extra } });
+
+  if (!skill) {
+    return reply('failed', { error: `Unknown skill: "${taskData.skill}"` });
+  }
+
+  await reply('working');
+  try {
+    const result = await skill.handler(taskData.params ?? {});
+    await reply('completed', { result });
+    addInboundTask(taskData, from, result);
+  } catch (err) {
+    await reply('failed', { error: err.message });
+    addInboundTask(taskData, from, null, err.message);
+  }
+}
+
+function addInboundTask(taskData, from, result, error) {
+  const item = { ...taskData, from, result, error, direction: 'in' };
+  inbound.unshift(item);
+  renderTasks();
+}
+
+// ── Outbound tasks / pending ───────────────────────────────────────────────
+
+const pending = new Map();  // taskId -> { resolve, reject, taskRef }
+
+function handleTaskUpdate(taskData) {
+  const p = pending.get(taskData.id);
+  if (!p) return;
+
+  // Update live task entry
+  Object.assign(p.taskRef, taskData);
+  renderTasks();
+
+  if (taskData.state === 'completed') {
+    clearTimeout(p.timer);
+    pending.delete(taskData.id);
+    p.resolve(taskData.result);
+  } else if (taskData.state === 'failed') {
+    clearTimeout(p.timer);
+    pending.delete(taskData.id);
+    p.reject(new Error(taskData.error));
+  }
+}
+
+function invoke(address, skill, params, timeout = 30000) {
+  const id = crypto.randomUUID();
+  const task = { id, skill, params, state: 'submitted', direction: 'out', to: address };
+  tasks.unshift(task);
+  renderTasks();
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      task.state = 'failed';
+      task.error = 'Timeout';
+      renderTasks();
+      reject(new Error('Task timed out'));
+    }, timeout);
+
+    pending.set(id, { resolve, reject, timer, taskRef: task });
+    send(address, { type: 'task', task: { id, skill, params, state: 'submitted' } });
+  });
+}
+
+// ── Remote agent management ────────────────────────────────────────────────
+
+async function connectToAgent() {
+  const addr  = document.getElementById('remote-addr').value.trim();
+  const label = document.getElementById('remote-label').value.trim() || shorten(addr);
+  if (!addr) { showToast('Paste an NKN address first'); return; }
+
+  if (!myClient || !myAddress) { showToast('Not connected to NKN yet'); return; }
+
+  remotes.set(addr, { address: addr, label, card: null });
+  renderAgentList();
+
+  log('sys', `Requesting agent card from ${shorten(addr)}…`);
+  await send(addr, { type: 'agent_card_request' });
+  document.getElementById('remote-addr').value  = '';
+  document.getElementById('remote-label').value = '';
+}
+
+function storeRemoteCard(address, card) {
+  const existing = remotes.get(address) ?? { address, label: shorten(address) };
+  existing.card = card;
+  if (card?.name) existing.label = card.name;
+  remotes.set(address, existing);
+  renderAgentList();
+  renderTaskTargets();
+  log('sys', `Got agent card for "${existing.label}"`);
+  showToast(`Connected: ${existing.label}`);
+}
+
+// ── UI rendering ───────────────────────────────────────────────────────────
+
+function setStatus(state) {
+  const dot   = document.getElementById('status-dot');
+  const label = document.getElementById('status-label');
+  dot.className = 'status-dot ' + state;
+  label.textContent = state === 'connected' ? 'Connected to NKN' :
+                      state === 'connecting' ? 'Connecting to NKN…' : 'Disconnected';
+}
+
+function updateMyCard() {
+  document.getElementById('my-address').childNodes[0].textContent = myAddress;
+  document.getElementById('card-name').textContent = 'Browser Agent';
+  const el = document.getElementById('card-skills');
+  el.innerHTML = '';
+  for (const [id] of skills) {
+    const p = document.createElement('span');
+    p.className = 'skill-pill';
+    p.textContent = id;
+    el.appendChild(p);
+  }
+  renderCapabilities();
+}
+
+function renderAgentList() {
+  const el    = document.getElementById('agent-list');
+  const count = document.getElementById('agent-count');
+  count.textContent = `(${remotes.size})`;
+
+  if (remotes.size === 0) {
+    el.innerHTML = '<div class="empty-state">No agents connected yet</div>';
+    return;
+  }
+
+  el.innerHTML = '';
+  for (const [addr, remote] of remotes) {
+    const div = document.createElement('div');
+    div.className = 'agent-item';
+    div.onclick = () => selectAgent(addr);
+
+    const skills = remote.card?.skills ?? [];
+    div.innerHTML = `
+      <div class="agent-name">${esc(remote.label)}</div>
+      <div class="agent-addr">${esc(addr)}</div>
+      <div class="agent-skills">${skills.map(s =>
+        `<span class="skill-pill">${esc(s.id)}</span>`).join('')}
+      </div>`;
+    el.appendChild(div);
+  }
+}
+
+function selectAgent(addr) {
+  document.querySelectorAll('.agent-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('task-target').value = addr;
+  switchTab('tasks', document.querySelectorAll('.tab')[0]);
+}
+
+function renderTaskTargets() {
+  const sel = document.getElementById('task-target');
+  sel.innerHTML = remotes.size === 0
+    ? '<option value="">— connect an agent first —</option>'
+    : Array.from(remotes.values()).map(r =>
+        `<option value="${esc(r.address)}">${esc(r.label)}</option>`
+      ).join('');
+}
+
+function renderTasks() {
+  const el  = document.getElementById('task-history');
+  const all = [...tasks, ...inbound].sort((a, b) => 0);  // newest first already
+
+  if (all.length === 0) {
+    el.innerHTML = '<div class="empty-state">No tasks yet</div>';
+    return;
+  }
+
+  el.innerHTML = all.slice(0, 30).map(t => {
+    const dir    = t.direction === 'out' ? '↑ sent' : '↓ received';
+    const peer   = t.direction === 'out' ? shorten(t.to) : shorten(t.from);
+    const detail = JSON.stringify(t.params ?? {}).slice(0, 80);
+    const result = t.result ? JSON.stringify(t.result).slice(0, 120) : t.error ?? '';
+    return `<div class="task-item">
+      <div class="task-header">
+        <span class="task-skill">${esc(t.skill)}</span>
+        <span class="badge ${t.state}">${t.state}</span>
+      </div>
+      <div class="task-direction">${dir} · ${esc(peer)}</div>
+      <div class="task-detail">${esc(detail)}</div>
+      ${result ? `<div class="task-result">${esc(result)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderCapabilities() {
+  const el = document.getElementById('cap-list');
+  el.innerHTML = Array.from(skills.values()).map(s => `
+    <div class="cap-item">
+      <div class="cap-header">
+        <span class="skill-pill">${esc(s.id)}</span>
+        <span class="cap-name">${esc(s.name)}</span>
+      </div>
+      <div class="cap-desc">${esc(s.description)}</div>
+      <div class="cap-code">// registered with capability({ skill: '${esc(s.id)}' })\n${esc(s.codeSnippet)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Task sending ───────────────────────────────────────────────────────────
+
+async function sendTask() {
+  const addr  = document.getElementById('task-target').value;
+  const skill = document.getElementById('task-skill').value.trim();
+  const raw   = document.getElementById('task-params').value.trim();
+
+  if (!addr)  { showToast('Select a target agent'); return; }
+  if (!skill) { showToast('Enter a skill ID'); return; }
+
+  let params;
+  try { params = JSON.parse(raw || '{}'); }
+  catch { showToast('Params must be valid JSON'); return; }
+
+  try {
+    const result = await invoke(addr, skill, params);
+    showToast(`✓ ${skill} completed`);
+    log('sys', `Task "${skill}" completed: ${JSON.stringify(result).slice(0, 80)}`);
+  } catch (err) {
+    showToast(`✗ ${err.message}`);
+    log('err', `Task "${skill}" failed: ${err.message}`);
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function copyAddress() {
+  if (!myAddress) return;
+  navigator.clipboard.writeText(myAddress).then(() => showToast('Address copied!'));
+}
+
+function shorten(addr) {
+  if (!addr) return '?';
+  return addr.length > 20 ? addr.slice(0, 8) + '…' + addr.slice(-8) : addr;
+}
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function log(type, text) {
+  const el   = document.getElementById('log-output');
+  const line = document.createElement('div');
+  line.className = 'log-line log-' + type;
+  const now  = new Date().toLocaleTimeString();
+  line.textContent = `[${now}] ${text}`;
+  el.prepend(line);
+  // keep at most 200 lines
+  while (el.children.length > 200) el.removeChild(el.lastChild);
+}
+
+function clearLog() {
+  document.getElementById('log-output').innerHTML = '';
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

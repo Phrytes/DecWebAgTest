@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0b0f;
+      --surface:  #13151e;
+      --surface2: #1c1f2e;
+      --border:   #252836;
+      --accent:   #6c63ff;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --yellow:   #f59e0b;
+      --text:     #e2e4ed;
+      --muted:    #636579;
+      --r:        10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+    header h1 em { color: var(--accent); font-style: normal; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+    .dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.warn { background: var(--yellow); animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    #conn-label { font-size: 12px; color: var(--muted); }
+    .spacer { flex: 1; }
+    .my-addr {
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .my-addr:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Layout ── */
+    .body { display: flex; flex: 1; overflow: hidden; }
+
+    /* Sidebar */
+    aside {
+      width: 280px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    input, textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 12px;
+      width: 100%;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+
+    .btn {
+      border: none;
+      border-radius: var(--r);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 9px 14px;
+      transition: opacity .15s, transform .1s;
+      width: 100%;
+    }
+    .btn:hover { opacity: .85; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-party {
+      background: linear-gradient(135deg, #ff006e, #fb5607, #ffbe0b, #8338ec, #3a86ff);
+      color: #fff;
+    }
+
+    label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
+    label:first-child { margin-top: 0; }
+
+    /* Connected display info */
+    .display-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 12px;
+    }
+    .display-card .name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .display-card .addr { font-family: monospace; font-size: 10px; color: var(--muted); word-break: break-all; }
+    .skill-tag {
+      display: inline-block;
+      background: rgba(108,99,255,.12);
+      border: 1px solid rgba(108,99,255,.25);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 10px;
+      margin: 2px;
+    }
+
+    /* ── Main ── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 14px;
+    }
+
+    /* Scene buttons */
+    .scene-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .scene-btn {
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 12px 6px;
+      text-align: center;
+      transition: all .2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .scene-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .scene-btn.active { border-color: var(--accent); background: rgba(108,99,255,.12); color: var(--accent); }
+    .scene-btn .icon { font-size: 22px; }
+
+    /* Color swatches */
+    .swatch-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-bottom: 10px; }
+    .swatch {
+      width: 100%;
+      padding-bottom: 100%;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform .15s, border-color .15s;
+      position: relative;
+    }
+    .swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,.5); }
+
+    /* Theme buttons */
+    .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .theme-btn {
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: center;
+      transition: all .2s;
+    }
+    .theme-btn:hover { border-color: rgba(255,255,255,.4); }
+
+    /* Sliders */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: var(--border);
+      height: 4px;
+      border-radius: 4px;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    input[type=color] {
+      height: 40px;
+      padding: 2px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      width: 100%;
+    }
+
+    /* Effects buttons */
+    .fx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .fx-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+    .fx-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .fx-btn:active { transform: scale(.96); }
+    .fx-btn .icon { font-size: 18px; display: block; margin-bottom: 3px; }
+
+    /* Log */
+    #log {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 12px;
+      height: 160px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    .log-line { margin-bottom: 3px; line-height: 1.5; }
+    .log-ok  { color: var(--green); }
+    .log-err { color: var(--red); }
+    .log-sys { color: var(--muted); }
+    .log-out { color: var(--accent); }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 10px 16px;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Disabled state */
+    .requires-connection { opacity: .4; pointer-events: none; transition: opacity .3s; }
+    .requires-connection.ready { opacity: 1; pointer-events: all; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="dot warn" id="my-dot"></div>
+  <h1>Control <em>Agent</em></h1>
+  <span id="conn-label">Connecting to NKN…</span>
+  <div class="spacer"></div>
+  <div class="my-addr" id="my-addr-pill" onclick="copyMyAddr()" title="Your address (click to copy)">—</div>
+</header>
+
+<div class="body">
+
+  <!-- ── Sidebar ── -->
+  <aside>
+
+    <div class="section">
+      <div class="section-title">Connect Display</div>
+      <label>Display Agent Address</label>
+      <input id="display-addr" placeholder="Paste display.html address…" />
+      <div style="height:8px"></div>
+      <button class="btn btn-primary" onclick="connectDisplay()">Connect →</button>
+    </div>
+
+    <div class="section" id="display-info" style="display:none">
+      <div class="section-title">Display Agent</div>
+      <div class="display-card">
+        <div class="name" id="display-name">Display Agent</div>
+        <div class="addr" id="display-addr-label">—</div>
+        <div id="display-skills" style="margin-top:8px"></div>
+      </div>
+      <div style="height:8px"></div>
+      <button class="btn btn-ghost" style="font-size:12px" onclick="disconnectDisplay()">Disconnect</button>
+    </div>
+
+    <div class="section" style="flex:1">
+      <div class="section-title">Command Log</div>
+      <div id="log"></div>
+    </div>
+
+  </aside>
+
+  <!-- ── Main ── -->
+  <main>
+
+    <div class="grid grid-2 requires-connection" id="controls">
+
+      <!-- Scenes -->
+      <div class="card" style="grid-column: 1 / -1">
+        <div class="card-title">🎬 Scene</div>
+        <div class="scene-grid">
+          <button class="scene-btn active" onclick="setScene('particles')" data-scene="particles">
+            <span class="icon">✨</span>Particles
+          </button>
+          <button class="scene-btn" onclick="setScene('aurora')" data-scene="aurora">
+            <span class="icon">🌌</span>Aurora
+          </button>
+          <button class="scene-btn" onclick="setScene('waves')" data-scene="waves">
+            <span class="icon">🌊</span>Waves
+          </button>
+          <button class="scene-btn" onclick="setScene('matrix')" data-scene="matrix">
+            <span class="icon">🖥️</span>Matrix
+          </button>
+          <button class="scene-btn" onclick="setScene('geometric')" data-scene="geometric">
+            <span class="icon">🔷</span>Geometric
+          </button>
+          <button class="scene-btn" onclick="setScene('fireworks')" data-scene="fireworks">
+            <span class="icon">🎆</span>Fireworks
+          </button>
+          <button class="scene-btn" onclick="setScene('bubbles')" data-scene="bubbles">
+            <span class="icon">🫧</span>Bubbles
+          </button>
+          <button class="scene-btn" onclick="setScene('none')" data-scene="none">
+            <span class="icon">⬛</span>None
+          </button>
+        </div>
+      </div>
+
+      <!-- Colors -->
+      <div class="card">
+        <div class="card-title">🎨 Color</div>
+        <div class="swatch-grid" id="swatches"></div>
+        <label>Custom color</label>
+        <input type="color" id="color-picker" value="#6c63ff" oninput="setColor(this.value)" />
+      </div>
+
+      <!-- Themes -->
+      <div class="card">
+        <div class="card-title">🎭 Theme</div>
+        <div class="theme-grid" id="themes"></div>
+        <div style="height:12px"></div>
+        <div class="card-title" style="margin-bottom:10px">⚡ Speed</div>
+        <input type="range" id="speed-slider" min="0.1" max="3" step="0.1" value="1"
+          oninput="setSpeed(this.value); document.getElementById('speed-val').textContent = parseFloat(this.value).toFixed(1)" />
+        <div style="text-align:right;font-size:11px;color:var(--muted);margin-top:4px">
+          speed: <span id="speed-val">1.0</span>×
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div class="card">
+        <div class="card-title">💬 Show Message</div>
+        <label>Text</label>
+        <input id="msg-text" placeholder="Your message…" />
+        <label>Color</label>
+        <input type="color" id="msg-color" value="#ffffff" />
+        <label>Duration (ms)</label>
+        <input type="number" id="msg-duration" value="3000" min="500" max="15000" step="500" />
+        <div style="height:8px"></div>
+        <button class="btn btn-primary" onclick="sendMessage()">Send →</button>
+      </div>
+
+      <!-- Effects -->
+      <div class="card">
+        <div class="card-title">💥 Effects</div>
+        <div class="fx-grid">
+          <button class="fx-btn" onclick="doFlash()">
+            <span class="icon">⚡</span>Flash White
+          </button>
+          <button class="fx-btn" onclick="doFlashColor()">
+            <span class="icon">🌈</span>Flash Color
+          </button>
+          <button class="fx-btn" onclick="doShake('soft')">
+            <span class="icon">📳</span>Shake (soft)
+          </button>
+          <button class="fx-btn" onclick="doShake('hard')">
+            <span class="icon">💢</span>Shake (hard)
+          </button>
+          <button class="fx-btn" onclick="sendCmd('reset', {})">
+            <span class="icon">↩️</span>Reset
+          </button>
+          <button class="fx-btn" onclick="sendCmd('ping', { message: 'ping!' })">
+            <span class="icon">🏓</span>Ping
+          </button>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn btn-party" onclick="doParty()">🎉 PARTY MODE</button>
+      </div>
+
+    </div>
+
+    <!-- No connection placeholder -->
+    <div id="placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;color:var(--muted);text-align:center;padding:40px">
+      <div style="font-size:48px">🛰️</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text)">No display connected</div>
+      <div style="font-size:13px;max-width:320px">
+        Open <code style="background:var(--surface);padding:2px 6px;border-radius:4px">display.html</code>
+        in another tab, copy its NKN address, and paste it in the sidebar.
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/nkn-sdk/dist/nkn.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Config
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SWATCHES = [
+  '#ff006e','#fb5607','#ffbe0b','#06d6a0',
+  '#3a86ff','#8338ec','#ff99c8','#00d4aa',
+  '#ffffff','#aaaaaa','#555555','#000000',
+  '#ff4d4d','#ffd166','#06d6a0','#118ab2',
+];
+
+const THEMES = [
+  { id: 'dark',   label: 'Dark',   bg: '#0f1117', accent: '#6c63ff' },
+  { id: 'neon',   label: 'Neon',   bg: '#05000f', accent: '#ff00ff' },
+  { id: 'sunset', label: 'Sunset', bg: '#1a0500', accent: '#ff6b35' },
+  { id: 'ocean',  label: 'Ocean',  bg: '#000d1a', accent: '#00d4aa' },
+  { id: 'forest', label: 'Forest', bg: '#000d04', accent: '#22c55e' },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NKN + A2A
+// ─────────────────────────────────────────────────────────────────────────────
+
+let myClient = null, myAddress = null;
+let displayAddress = null;
+const pending = new Map();
+
+function initNKN() {
+  myClient = new nkn.Client();
+
+  myClient.on('connect', () => {
+    myAddress = myClient.addr;
+    document.getElementById('my-dot').className   = 'dot ok';
+    document.getElementById('conn-label').textContent = 'Ready';
+    const p = document.getElementById('my-addr-pill');
+    p.textContent = myAddress.slice(0,10) + '…' + myAddress.slice(-6);
+    log('sys', 'Control agent connected: ' + myAddress.slice(0,16) + '…');
+  });
+
+  myClient.on('message', (msg) => {
+    let message;
+    try { message = JSON.parse(msg.payload.toString()); } catch { return; }
+
+    if (message.type === 'task_update') handleTaskUpdate(message.task);
+    if (message.type === 'agent_card_response') handleCardResponse(msg.src, message.card);
+  });
+}
+
+async function sendCmd(skill, params = {}) {
+  if (!displayAddress) { toast('Connect a display first'); return; }
+
+  const id   = crypto.randomUUID();
+  const task = { id, skill, params, state: 'submitted' };
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      log('err', `Timeout: ${skill}`);
+      reject(new Error('timeout'));
+    }, 10000);
+
+    pending.set(id, { resolve, reject, timer, skill });
+    myClient.send(displayAddress, JSON.stringify({ type: 'task', task }));
+    log('out', `→ ${skill}(${JSON.stringify(params).slice(0, 60)})`);
+  });
+}
+
+function handleTaskUpdate(task) {
+  const p = pending.get(task.id);
+  if (!p) return;
+  if (task.state === 'completed') {
+    clearTimeout(p.timer);
+    pending.delete(task.id);
+    log('ok', `✓ ${p.skill}: ${JSON.stringify(task.result ?? {}).slice(0, 60)}`);
+    p.resolve(task.result);
+  } else if (task.state === 'failed') {
+    clearTimeout(p.timer);
+    pending.delete(task.id);
+    log('err', `✗ ${p.skill}: ${task.error}`);
+    p.reject(new Error(task.error));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Display connection
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function connectDisplay() {
+  const addr = document.getElementById('display-addr').value.trim();
+  if (!addr) { toast('Paste the display address first'); return; }
+  if (!myClient || !myAddress) { toast('Still connecting to NKN…'); return; }
+
+  displayAddress = addr;
+  log('sys', 'Requesting agent card from display…');
+
+  myClient.send(addr, JSON.stringify({ type: 'agent_card_request' }));
+}
+
+function handleCardResponse(from, card) {
+  displayAddress = from;
+
+  document.getElementById('display-info').style.display = 'block';
+  document.getElementById('display-name').textContent = card.name ?? 'Display Agent';
+  document.getElementById('display-addr-label').textContent = from;
+  document.getElementById('display-skills').innerHTML =
+    (card.skills ?? []).map(s => `<span class="skill-tag">${s.id}</span>`).join('');
+
+  // Show controls, hide placeholder
+  document.getElementById('controls').classList.add('ready');
+  document.getElementById('placeholder').style.display = 'none';
+
+  document.getElementById('my-dot').className = 'dot ok';
+  document.getElementById('conn-label').textContent = `Connected → ${card.name ?? 'Display'}`;
+  toast(`✓ Connected to ${card.name ?? 'Display Agent'}`);
+  log('ok', `Card received from ${card.name ?? 'Display'}`);
+}
+
+function disconnectDisplay() {
+  displayAddress = null;
+  document.getElementById('display-info').style.display = 'none';
+  document.getElementById('controls').classList.remove('ready');
+  document.getElementById('placeholder').style.display = 'flex';
+  document.getElementById('conn-label').textContent = 'Ready';
+  log('sys', 'Disconnected from display');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Control functions
+// ─────────────────────────────────────────────────────────────────────────────
+
+function setScene(scene) {
+  document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-scene="${scene}"]`)?.classList.add('active');
+  sendCmd('set_scene', { scene });
+}
+
+function setColor(color) {
+  sendCmd('set_color', { color });
+}
+
+function setTheme(theme) {
+  sendCmd('set_theme', { theme });
+}
+
+function setSpeed(value) {
+  sendCmd('set_speed', { value: parseFloat(value) });
+}
+
+function doFlash() {
+  sendCmd('flash', { color: '#ffffff', duration: 300 });
+}
+
+function doFlashColor() {
+  const colors = ['#ff006e','#fb5607','#ffbe0b','#8338ec','#3a86ff','#06d6a0'];
+  const color  = colors[Math.floor(Math.random() * colors.length)];
+  sendCmd('flash', { color, duration: 400 });
+}
+
+function doShake(mode) {
+  const cfg = mode === 'hard'
+    ? { intensity: 25, duration: 600 }
+    : { intensity: 8,  duration: 400 };
+  sendCmd('shake', cfg);
+}
+
+async function doParty() {
+  sendCmd('party', { duration: 8000 });
+  toast('🎉 Party mode!');
+}
+
+function sendMessage() {
+  const text     = document.getElementById('msg-text').value.trim();
+  const color    = document.getElementById('msg-color').value;
+  const duration = parseInt(document.getElementById('msg-duration').value) || 3000;
+  if (!text) { toast('Type a message first'); return; }
+  sendCmd('show_message', { text, color, duration });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI init
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildSwatches() {
+  const el = document.getElementById('swatches');
+  for (const color of SWATCHES) {
+    const div = document.createElement('div');
+    div.className = 'swatch';
+    div.style.background = color;
+    div.style.paddingBottom = '100%';
+    div.title = color;
+    div.onclick = () => {
+      document.getElementById('color-picker').value = color;
+      setColor(color);
+    };
+    el.appendChild(div);
+  }
+}
+
+function buildThemes() {
+  const el = document.getElementById('themes');
+  for (const t of THEMES) {
+    const btn = document.createElement('button');
+    btn.className = 'theme-btn';
+    btn.style.background = t.bg;
+    btn.style.color = t.accent;
+    btn.style.borderColor = t.accent + '44';
+    btn.textContent = t.label;
+    btn.onclick = () => setTheme(t.id);
+    el.appendChild(btn);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function log(type, text) {
+  const el   = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = 'log-line log-' + type;
+  const now  = new Date().toLocaleTimeString();
+  line.textContent = `[${now}] ${text}`;
+  el.prepend(line);
+  while (el.children.length > 100) el.removeChild(el.lastChild);
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function copyMyAddr() {
+  if (!myAddress) return;
+  navigator.clipboard.writeText(myAddress);
+  toast('Your address copied!');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boot
+// ─────────────────────────────────────────────────────────────────────────────
+
+buildSwatches();
+buildThemes();
+initNKN();
+</script>
+</body>
+</html>
