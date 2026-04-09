@@ -8,823 +8,395 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0f1117;
-      --surface:  #1a1d27;
-      --border:   #2a2d3a;
-      --accent:   #6c63ff;
-      --accent2:  #00d4aa;
-      --text:     #e2e4ed;
-      --muted:    #7a7d8e;
-      --green:    #22c55e;
-      --red:      #ef4444;
-      --yellow:   #f59e0b;
-      --radius:   10px;
-      --font:     'Inter', system-ui, sans-serif;
+      --bg:     #0f1117; --surf:  #1a1d27; --border: #2a2d3a;
+      --accent: #6c63ff; --green: #22c55e; --red:    #ef4444; --yellow: #f59e0b;
+      --text:   #e2e4ed; --muted: #7a7d8e; --r:      10px;
     }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 14px;
-      min-height: 100vh;
-      display: grid;
-      grid-template-rows: 56px 1fr;
-      grid-template-columns: 300px 1fr;
-      grid-template-areas: "header header" "sidebar main";
-    }
+    body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; font-size:14px; min-height:100vh; display:grid; grid-template-rows:56px 1fr; grid-template-columns:300px 1fr; grid-template-areas:"hdr hdr" "side main"; }
 
-    /* ── Header ── */
-    header {
-      grid-area: header;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 20px;
-    }
-    header h1 { font-size: 16px; font-weight: 600; letter-spacing: .3px; }
-    header h1 span { color: var(--accent); }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--muted); flex-shrink: 0;
-      transition: background .3s;
-    }
-    .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .status-dot.connecting { background: var(--yellow); animation: pulse 1s infinite; }
-    #status-label { color: var(--muted); font-size: 12px; }
-    header .spacer { flex: 1; }
+    /* Header */
+    header { grid-area:hdr; background:var(--surf); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; padding:0 20px; }
+    header h1 { font-size:15px; font-weight:600; }
+    header h1 span { color:var(--accent); }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+    .dot.ready { background:var(--green); box-shadow:0 0 6px var(--green); }
+    .dot.warn  { background:var(--yellow); animation:blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+    #status { font-size:12px; color:var(--muted); }
+    .spacer { flex:1; }
 
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    /* Sidebar */
+    aside { grid-area:side; background:var(--surf); border-right:1px solid var(--border); overflow-y:auto; display:flex; flex-direction:column; }
+    .section { border-bottom:1px solid var(--border); padding:16px; }
+    .section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:10px; }
 
-    /* ── Sidebar ── */
-    aside {
-      grid-area: sidebar;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
+    .addr-box { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); padding:10px 12px; font-family:monospace; font-size:11px; color:#00d4aa; word-break:break-all; cursor:pointer; transition:border-color .2s; }
+    .addr-box:hover { border-color:#00d4aa; }
+    .addr-box small { display:block; font-family:system-ui; font-size:10px; color:var(--muted); margin-top:3px; }
 
-    .section {
-      border-bottom: 1px solid var(--border);
-      padding: 16px;
-    }
-    .section-title {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
+    input { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); color:var(--text); font-family:inherit; font-size:13px; padding:8px 12px; width:100%; outline:none; transition:border-color .2s; }
+    input:focus { border-color:var(--accent); }
+    label { display:block; font-size:11px; color:var(--muted); margin-bottom:4px; margin-top:10px; }
+    label:first-child { margin-top:0; }
 
-    .address-box {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      font-family: monospace;
-      font-size: 11px;
-      color: var(--accent2);
-      word-break: break-all;
-      cursor: pointer;
-      transition: border-color .2s;
-      position: relative;
-    }
-    .address-box:hover { border-color: var(--accent2); }
-    .address-box .copy-hint {
-      display: block;
-      font-family: var(--font);
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
+    .btn { border:none; border-radius:var(--r); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; padding:8px 14px; transition:opacity .15s; width:100%; }
+    .btn:hover { opacity:.85; }
+    .primary { background:var(--accent); color:#fff; }
+    .ghost { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .ghost:hover { border-color:var(--accent); color:var(--accent); }
+    .sm { padding:5px 10px; font-size:12px; width:auto; }
 
-    /* Agent card */
-    .card-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
-    .card-row .label { color: var(--muted); }
-    .card-row .value { color: var(--text); font-weight: 500; }
+    .skill-pill { display:inline-block; background:rgba(108,99,255,.15); border:1px solid rgba(108,99,255,.3); color:var(--accent); border-radius:20px; padding:2px 9px; font-size:11px; margin:2px; }
 
-    .skill-pill {
-      display: inline-block;
-      background: rgba(108,99,255,.15);
-      border: 1px solid rgba(108,99,255,.3);
-      color: var(--accent);
-      border-radius: 20px;
-      padding: 2px 10px;
-      font-size: 11px;
-      margin: 2px;
-    }
+    .agent-item { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); padding:10px 12px; margin-bottom:8px; cursor:pointer; transition:border-color .2s; }
+    .agent-item:hover, .agent-item.active { border-color:var(--accent); }
+    .agent-item .name { font-weight:600; font-size:13px; margin-bottom:2px; }
+    .agent-item .addr { font-family:monospace; font-size:10px; color:var(--muted); word-break:break-all; }
 
-    /* Connected agents */
-    .agent-item {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      transition: border-color .2s;
-    }
-    .agent-item:hover, .agent-item.active { border-color: var(--accent); }
-    .agent-item .agent-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
-    .agent-item .agent-addr { font-family: monospace; font-size: 10px; color: var(--muted); word-break: break-all; }
-    .agent-item .agent-skills { margin-top: 6px; }
+    /* Main */
+    main { grid-area:main; display:flex; flex-direction:column; overflow:hidden; }
 
-    .btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: 8px 14px;
-      font-size: 13px;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: opacity .2s, transform .1s;
-      width: 100%;
-      font-weight: 500;
-    }
-    .btn:hover { opacity: .85; }
-    .btn:active { transform: scale(.98); }
-    .btn.secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-    .btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
-    .btn.small { padding: 5px 10px; font-size: 12px; width: auto; }
-    .btn.danger { background: var(--red); }
+    .tabs { display:flex; border-bottom:1px solid var(--border); padding:0 20px; background:var(--surf); }
+    .tab { padding:14px 16px; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:color .2s,border-color .2s; user-select:none; }
+    .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .tab:hover:not(.active) { color:var(--text); }
 
-    input, textarea, select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 8px 12px;
-      width: 100%;
-      outline: none;
-      transition: border-color .2s;
-    }
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
-    label:first-child { margin-top: 0; }
-    textarea { resize: vertical; min-height: 80px; font-family: monospace; font-size: 12px; }
+    .pane { flex:1; overflow-y:auto; padding:20px; display:none; }
+    .pane.active { display:block; }
 
-    /* ── Main ── */
-    main {
-      grid-area: main;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    /* Task pane */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .panel { background:var(--surf); border:1px solid var(--border); border-radius:var(--r); padding:16px; }
+    .panel-title { font-size:13px; font-weight:600; margin-bottom:14px; }
 
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      background: var(--surface);
-    }
-    .tab {
-      padding: 14px 18px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color .2s, border-color .2s;
-      user-select: none;
-    }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-    .tab:hover:not(.active) { color: var(--text); }
+    select { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); color:var(--text); font-family:inherit; font-size:13px; padding:8px 12px; width:100%; outline:none; }
+    select:focus { border-color:var(--accent); }
+    textarea { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); color:var(--text); font-family:monospace; font-size:12px; padding:8px 12px; width:100%; outline:none; resize:vertical; min-height:80px; transition:border-color .2s; }
+    textarea:focus { border-color:var(--accent); }
 
-    .tab-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: none;
-    }
-    .tab-content.active { display: block; }
+    .task-item { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); padding:12px; margin-bottom:10px; font-size:12px; }
+    .task-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+    .task-skill { font-weight:600; font-size:13px; }
+    .badge { border-radius:20px; padding:2px 8px; font-size:11px; font-weight:600; }
+    .badge.submitted { background:rgba(245,158,11,.15); color:var(--yellow); }
+    .badge.working   { background:rgba(108,99,255,.15); color:var(--accent); }
+    .badge.completed { background:rgba(34,197,94,.15);  color:var(--green); }
+    .badge.failed    { background:rgba(239,68,68,.15);  color:var(--red); }
+    .task-dir  { color:var(--muted); font-size:11px; }
+    .task-data { color:var(--muted); font-family:monospace; font-size:11px; word-break:break-all; }
+    .task-res  { color:#00d4aa; font-family:monospace; font-size:11px; margin-top:3px; word-break:break-all; }
 
-    /* ── Task pane ── */
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-    }
-    .panel-title {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 14px;
-      color: var(--text);
-    }
+    /* Log */
+    #log { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); padding:12px; min-height:400px; font-family:monospace; font-size:12px; white-space:pre-wrap; }
+    .ll { margin-bottom:3px; line-height:1.5; }
+    .li { color:#00d4aa; } .lo { color:var(--accent); } .ls { color:var(--muted); } .le { color:var(--red); }
 
-    /* Task history */
-    .task-item {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-bottom: 10px;
-      font-size: 12px;
-    }
-    .task-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .task-skill { font-weight: 600; font-size: 13px; }
-    .task-direction { color: var(--muted); font-size: 11px; }
-    .badge {
-      border-radius: 20px;
-      padding: 2px 8px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .badge.submitted  { background: rgba(245,158,11,.15); color: var(--yellow); }
-    .badge.working    { background: rgba(108,99,255,.15);  color: var(--accent); }
-    .badge.completed  { background: rgba(34,197,94,.15);   color: var(--green); }
-    .badge.failed     { background: rgba(239,68,68,.15);   color: var(--red); }
+    .empty { text-align:center; color:var(--muted); padding:30px; font-size:13px; }
 
-    .task-detail { color: var(--muted); font-family: monospace; font-size: 11px; word-break: break-all; }
-    .task-result { color: var(--accent2); font-family: monospace; font-size: 11px; margin-top: 4px; word-break: break-all; }
-
-    /* ── Log tab ── */
-    #log-output {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      font-family: monospace;
-      font-size: 12px;
-      min-height: 400px;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .log-line { margin-bottom: 4px; line-height: 1.5; }
-    .log-in    { color: var(--accent2); }
-    .log-out   { color: var(--accent); }
-    .log-sys   { color: var(--muted); }
-    .log-err   { color: var(--red); }
-
-    /* ── Capabilities tab ── */
-    .cap-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 10px;
-    }
-    .cap-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .cap-id { font-family: monospace; font-weight: 600; color: var(--accent2); }
-    .cap-name { color: var(--text); font-weight: 500; }
-    .cap-desc { color: var(--muted); font-size: 12px; }
-    .cap-code {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 11px;
-      color: #a0aec0;
-      margin-top: 8px;
-      white-space: pre-wrap;
-    }
-
-    .empty-state {
-      text-align: center;
-      color: var(--muted);
-      padding: 40px 20px;
-      font-size: 13px;
-    }
-
-    .connect-form { display: flex; flex-direction: column; gap: 8px; }
-
-    /* Toast */
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 16px;
-      font-size: 13px;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity .2s, transform .2s;
-      pointer-events: none;
-      z-index: 100;
-    }
-    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast { position:fixed; bottom:20px; right:20px; background:var(--surf); border:1px solid var(--border); border-radius:var(--r); padding:10px 16px; font-size:13px; opacity:0; transform:translateY(8px); transition:opacity .2s,transform .2s; pointer-events:none; z-index:100; }
+    #toast.show { opacity:1; transform:translateY(0); }
   </style>
 </head>
 <body>
 
-<!-- ── Header ── -->
 <header>
-  <div class="status-dot connecting" id="status-dot"></div>
+  <div class="dot warn" id="dot"></div>
   <h1>Agent Network <span>Explorer</span></h1>
-  <span id="status-label">Connecting to NKN…</span>
+  <span id="status">Starting…</span>
   <div class="spacer"></div>
 </header>
 
-<!-- ── Sidebar ── -->
 <aside>
-
   <div class="section">
     <div class="section-title">My Agent</div>
-    <div class="address-box" id="my-address" onclick="copyAddress()" title="Click to copy">
+    <div class="addr-box" id="my-addr" onclick="copyAddr()" title="Click to copy">
       Connecting…
-      <span class="copy-hint">Click to copy address</span>
+      <small>Click to copy Peer ID</small>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Agent Card</div>
-    <div class="card-row"><span class="label">Name</span><span class="value" id="card-name">—</span></div>
-    <div class="card-row"><span class="label">Version</span><span class="value">1.0</span></div>
-    <div style="margin-top:8px; font-size:11px; color:var(--muted); margin-bottom:4px;">Skills</div>
-    <div id="card-skills"></div>
+    <div class="section-title">My Skills</div>
+    <div id="my-skills"></div>
   </div>
 
   <div class="section">
     <div class="section-title">Connect to Agent</div>
-    <div class="connect-form">
-      <input id="remote-addr" placeholder="Paste NKN address…" />
-      <input id="remote-label" placeholder="Label (optional)" />
-      <button class="btn" onclick="connectToAgent()">Connect &amp; Fetch Card</button>
-    </div>
+    <label>Peer ID</label>
+    <input id="peer-input" placeholder="Paste Peer ID…" />
+    <label>Label (optional)</label>
+    <input id="peer-label" placeholder="e.g. Display Agent" />
+    <div style="height:8px"></div>
+    <button class="btn primary" onclick="connectToPeer()">Connect &amp; Fetch Card</button>
   </div>
 
   <div class="section" style="flex:1">
     <div class="section-title">Connected Agents <span id="agent-count" style="color:var(--muted)">(0)</span></div>
-    <div id="agent-list"><div class="empty-state">No agents connected yet</div></div>
+    <div id="agent-list"><div class="empty">None yet</div></div>
   </div>
-
 </aside>
 
-<!-- ── Main ── -->
 <main>
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('tasks', this)">Tasks</div>
-    <div class="tab" onclick="switchTab('capabilities', this)">My Capabilities</div>
-    <div class="tab" onclick="switchTab('log', this)">Message Log</div>
+    <div class="tab active" onclick="switchTab('tasks',this)">Tasks</div>
+    <div class="tab" onclick="switchTab('log',this)">Message Log</div>
   </div>
 
-  <!-- Tasks tab -->
-  <div class="tab-content active" id="tab-tasks">
+  <div class="pane active" id="pane-tasks">
     <div class="two-col">
-
       <div class="panel">
         <div class="panel-title">Send Task</div>
         <label>Target Agent</label>
-        <select id="task-target">
-          <option value="">— connect an agent first —</option>
-        </select>
+        <select id="task-target"><option value="">— connect an agent first —</option></select>
         <label>Skill ID</label>
-        <input id="task-skill" placeholder="e.g. ping, echo, summarise" />
-        <label>Parameters (JSON)</label>
+        <input id="task-skill" placeholder="e.g. ping, echo" />
+        <label>Params (JSON)</label>
         <textarea id="task-params">{ "message": "hello!" }</textarea>
-        <br/>
-        <button class="btn" onclick="sendTask()">Send Task →</button>
+        <div style="height:8px"></div>
+        <button class="btn primary" onclick="sendTask()">Send Task →</button>
       </div>
-
       <div class="panel">
         <div class="panel-title">Task History</div>
-        <div id="task-history"><div class="empty-state">No tasks yet</div></div>
+        <div id="task-history"><div class="empty">No tasks yet</div></div>
       </div>
-
     </div>
   </div>
 
-  <!-- Capabilities tab -->
-  <div class="tab-content" id="tab-capabilities">
-    <div id="cap-list"></div>
-  </div>
-
-  <!-- Log tab -->
-  <div class="tab-content" id="tab-log">
+  <div class="pane" id="pane-log">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <span style="font-size:13px;color:var(--muted)">Raw A2A message traffic</span>
-      <button class="btn secondary small" onclick="clearLog()">Clear</button>
+      <button class="btn ghost sm" onclick="document.getElementById('log').innerHTML=''">Clear</button>
     </div>
-    <div id="log-output"></div>
+    <div id="log"></div>
   </div>
 </main>
 
 <div id="toast"></div>
 
-<script src="https://unpkg.com/nkn-sdk/dist/nkn.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
-// Core A2A implementation (mirrors the SDK, but browser-native)
+// Local skills
 // ─────────────────────────────────────────────────────────────────────────────
 
-let myClient = null;
-let myAddress = null;
+const mySkills = {
+  ping:      async ({message='ping'}={}) => ({echo:message, ts:Date.now()}),
+  echo:      async (params)              => params,
+  uppercase: async ({text=''})           => ({result:text.toUpperCase()}),
+  agent_card:async ()                    => buildCard(),
+};
 
-const skills    = new Map();   // skillId -> { handler, meta }
-const remotes   = new Map();   // address -> { label, address, card }
-const tasks     = [];          // task history (outbound)
-const inbound   = [];          // incoming tasks
-
-// ── Pre-built demo skills ──────────────────────────────────────────────────
-
-function registerSkill(id, name, description, handler, codeSnippet) {
-  skills.set(id, { id, name, description, handler, codeSnippet });
+function buildCard() {
+  return { name:'Explorer Agent', description:'General-purpose A2A explorer', url:`peer://${myAddr??'?'}`, version:'1.0', capabilities:{streaming:false,pushNotifications:false}, skills:Object.keys(mySkills).map(id=>({id,inputModes:['application/json'],outputModes:['application/json']})) };
 }
 
-registerSkill('ping', 'Ping', 'Echo back a message with a timestamp.',
-  async ({ message }) => ({ echo: message, ts: Date.now() }),
-  `async ({ message }) => ({\n  echo: message,\n  ts: Date.now()\n})`
-);
+// ─────────────────────────────────────────────────────────────────────────────
+// PeerJS
+// ─────────────────────────────────────────────────────────────────────────────
 
-registerSkill('echo', 'Echo', 'Return the exact params that were sent.',
-  async (params) => params,
-  `async (params) => params`
-);
+let peer, myAddr;
+const conns   = new Map();  // peerId -> DataConnection
+const remotes = new Map();  // peerId -> { label, card }
+const pending = new Map();  // taskId -> { resolve, reject, timer, skill }
+const taskLog = [];
 
-registerSkill('uppercase', 'Uppercase', 'Convert a text string to uppercase.',
-  async ({ text }) => ({ result: (text ?? '').toUpperCase() }),
-  `async ({ text }) => ({\n  result: (text ?? '').toUpperCase()\n})`
-);
+function start() {
+  peer = new Peer({ config:{ iceServers:[
+    {urls:'stun:stun.l.google.com:19302'},
+    {urls:'stun:stun1.l.google.com:19302'},
+  ]}});
 
-registerSkill('agent_card', 'Agent Card', 'Return this agent\'s A2A card.',
-  async () => buildAgentCard(),
-  `async () => buildAgentCard()`
-);
+  peer.on('open', (id) => {
+    myAddr = id;
+    document.getElementById('dot').className = 'dot ready';
+    document.getElementById('status').textContent = 'Ready';
+    document.getElementById('my-addr').childNodes[0].textContent = id;
+    renderMySkills();
+    slog('sys', `Ready as ${id.slice(0,12)}…`);
+  });
 
-// ── Agent Card ─────────────────────────────────────────────────────────────
-
-function buildAgentCard() {
-  return {
-    name:        'Browser Agent',
-    description: 'A2A agent running in the browser via NKN',
-    url:         myAddress ? `nkn://${myAddress}` : 'not-connected',
-    version:     '1.0',
-    capabilities: { streaming: false, pushNotifications: false },
-    skills: Array.from(skills.values()).map(s => ({
-      id:          s.id,
-      name:        s.name,
-      description: s.description,
-      inputModes:  ['application/json'],
-      outputModes: ['application/json'],
-    })),
-  };
+  peer.on('connection', (conn) => { wireIncoming(conn); });
+  peer.on('error', (e) => { document.getElementById('status').textContent='Error: '+e.type; slog('err',e.type); });
 }
 
-// ── NKN setup ──────────────────────────────────────────────────────────────
-
-const SEED_NODES = [
-  'https://mainnet-rpc-node-0001.nkn.org',
-  'https://mainnet-rpc-node-0002.nkn.org',
-  'https://mainnet-rpc-node-0003.nkn.org',
-  'https://mainnet-rpc-node-0004.nkn.org',
-];
-
-function init(seedIndex = 0) {
-  setStatus('connecting');
-  myClient = new nkn.Client({
-    seedRpcServerAddr: SEED_NODES[seedIndex % SEED_NODES.length],
-    connectRetries: 3,
+function wireIncoming(conn) {
+  conn.on('open', () => {
+    conns.set(conn.peer, conn);
+    if (!remotes.has(conn.peer)) remotes.set(conn.peer, {label: conn.peer.slice(0,12)+'…', card:null});
+    setupConnHandlers(conn);
+    slog('sys', `Incoming connection from ${conn.peer.slice(0,12)}…`);
   });
+}
 
-  myClient.on('error', () => {
-    console.warn(`Seed ${seedIndex} failed, trying next…`);
-    myClient.close?.();
-    init(seedIndex + 1);
+async function connectToPeer() {
+  const id    = document.getElementById('peer-input').value.trim();
+  const label = document.getElementById('peer-label').value.trim() || id.slice(0,12)+'…';
+  if (!id) { toast('Paste a Peer ID first'); return; }
+  if (!peer?.open) { toast('Not ready yet'); return; }
+
+  slog('sys', `Connecting to ${label}…`);
+  const conn = peer.connect(id, { reliable:true, serialization:'json' });
+
+  conn.on('open', () => {
+    conns.set(id, conn);
+    remotes.set(id, { label, card:null });
+    setupConnHandlers(conn);
+    renderAgentList(); renderTargets();
+    slog('sys', `Connected to ${label} — requesting card…`);
+    sendTo(id, { type:'agent_card_request' });
+    document.getElementById('peer-input').value = '';
+    document.getElementById('peer-label').value = '';
   });
+  conn.on('error', (e) => { slog('err', e.message); toast('Connection failed'); });
+}
 
-  myClient.on('connect', () => {
-    myAddress = myClient.addr;
-    setStatus('connected');
-    updateMyCard();
-    log('sys', `Connected as ${myAddress}`);
+function setupConnHandlers(conn) {
+  conn.on('data', (raw) => {
+    const msg = typeof raw==='string' ? JSON.parse(raw) : raw;
+    slog('in', `← ${conn.peer.slice(0,10)}… ${JSON.stringify(msg).slice(0,80)}`);
+    handleMessage(conn.peer, msg);
   });
+  conn.on('close', () => { conns.delete(conn.peer); slog('sys', `${conn.peer.slice(0,10)}… disconnected`); });
+}
 
-  myClient.on('message', async (msg) => {
-    const from = msg.src;
-    const raw  = msg.payload.toString();
-    log('in', `← ${shorten(from)}  ${raw.slice(0, 120)}${raw.length > 120 ? '…' : ''}`);
+function sendTo(peerId, msg) {
+  const conn = conns.get(peerId);
+  if (!conn?.open) { slog('err','Not connected to '+peerId.slice(0,10)+'…'); return; }
+  const raw = JSON.stringify(msg);
+  slog('out', `→ ${peerId.slice(0,10)}… ${raw.slice(0,80)}`);
+  conn.send(raw);
+}
 
-    let message;
-    try { message = JSON.parse(raw); } catch { return; }
+// ─────────────────────────────────────────────────────────────────────────────
+// A2A message handling
+// ─────────────────────────────────────────────────────────────────────────────
 
-    switch (message.type) {
-      case 'task':              return handleIncomingTask(from, message.task);
-      case 'task_update':       return handleTaskUpdate(message.task);
-      case 'agent_card_request':
-        send(from, { type: 'agent_card_response', card: buildAgentCard() });
-        break;
-      case 'agent_card_response':
-        storeRemoteCard(from, message.card);
-        break;
+async function handleMessage(from, msg) {
+  switch (msg.type) {
+
+    case 'agent_card_request':
+      sendTo(from, { type:'agent_card_response', card:buildCard() });
+      break;
+
+    case 'agent_card_response':
+      remotes.set(from, { ...remotes.get(from), card:msg.card, label:msg.card?.name??remotes.get(from)?.label });
+      renderAgentList(); renderTargets();
+      toast(`✓ Card: ${msg.card?.name}`);
+      break;
+
+    case 'task': {
+      const { task } = msg;
+      const skill = mySkills[task.skill];
+      const reply = (state,extra={}) => sendTo(from, {type:'task_update',task:{...task,state,...extra}});
+      if (!skill) { reply('failed',{error:`Unknown skill: "${task.skill}"`}); break; }
+      reply('working');
+      try   { reply('completed',{result:await skill(task.params??{})}); addTask({...task,direction:'in',from,state:'completed'}); }
+      catch (e) { reply('failed',{error:e.message}); }
+      break;
     }
-  });
-}
 
-async function send(address, obj) {
-  const raw = JSON.stringify(obj);
-  log('out', `→ ${shorten(address)}  ${raw.slice(0, 120)}${raw.length > 120 ? '…' : ''}`);
-  await myClient.send(address, raw, { noReply: true });
-}
-
-// ── Incoming tasks ─────────────────────────────────────────────────────────
-
-async function handleIncomingTask(from, taskData) {
-  const skill = skills.get(taskData.skill);
-
-  const reply = (state, extra = {}) =>
-    send(from, { type: 'task_update', task: { ...taskData, state, ...extra } });
-
-  if (!skill) {
-    return reply('failed', { error: `Unknown skill: "${taskData.skill}"` });
-  }
-
-  await reply('working');
-  try {
-    const result = await skill.handler(taskData.params ?? {});
-    await reply('completed', { result });
-    addInboundTask(taskData, from, result);
-  } catch (err) {
-    await reply('failed', { error: err.message });
-    addInboundTask(taskData, from, null, err.message);
+    case 'task_update':
+      handleTaskUpdate(msg.task);
+      break;
   }
 }
 
-function addInboundTask(taskData, from, result, error) {
-  const item = { ...taskData, from, result, error, direction: 'in' };
-  inbound.unshift(item);
-  renderTasks();
-}
+function sendTask() {
+  const peerId = document.getElementById('task-target').value;
+  const skill  = document.getElementById('task-skill').value.trim();
+  const raw    = document.getElementById('task-params').value.trim();
+  if (!peerId) { toast('Select a target agent'); return; }
+  if (!skill)  { toast('Enter a skill ID'); return; }
+  let params; try { params=JSON.parse(raw||'{}'); } catch { toast('Params must be valid JSON'); return; }
 
-// ── Outbound tasks / pending ───────────────────────────────────────────────
-
-const pending = new Map();  // taskId -> { resolve, reject, taskRef }
-
-function handleTaskUpdate(taskData) {
-  const p = pending.get(taskData.id);
-  if (!p) return;
-
-  // Update live task entry
-  Object.assign(p.taskRef, taskData);
-  renderTasks();
-
-  if (taskData.state === 'completed') {
-    clearTimeout(p.timer);
-    pending.delete(taskData.id);
-    p.resolve(taskData.result);
-  } else if (taskData.state === 'failed') {
-    clearTimeout(p.timer);
-    pending.delete(taskData.id);
-    p.reject(new Error(taskData.error));
-  }
-}
-
-function invoke(address, skill, params, timeout = 30000) {
-  const id = crypto.randomUUID();
-  const task = { id, skill, params, state: 'submitted', direction: 'out', to: address };
-  tasks.unshift(task);
-  renderTasks();
+  const id   = crypto.randomUUID();
+  const task = { id, skill, params, state:'submitted', direction:'out', to:peerId };
+  addTask(task);
+  sendTo(peerId, { type:'task', task:{ id, skill, params, state:'submitted' } });
 
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      pending.delete(id);
-      task.state = 'failed';
-      task.error = 'Timeout';
-      renderTasks();
-      reject(new Error('Task timed out'));
-    }, timeout);
-
-    pending.set(id, { resolve, reject, timer, taskRef: task });
-    send(address, { type: 'task', task: { id, skill, params, state: 'submitted' } });
-  });
+    function startTimer() { return setTimeout(()=>{ pending.delete(id); task.state='failed'; task.error='Timeout'; renderTasks(); reject(new Error('timeout')); },30_000); }
+    pending.set(id, { resolve, reject, skill, timer:startTimer(), startTimer, taskRef:task });
+  }).then(r=>{ toast(`✓ ${skill}`); return r; }).catch(e=>toast(`✗ ${e.message}`));
 }
 
-// ── Remote agent management ────────────────────────────────────────────────
-
-async function connectToAgent() {
-  const addr  = document.getElementById('remote-addr').value.trim();
-  const label = document.getElementById('remote-label').value.trim() || shorten(addr);
-  if (!addr) { showToast('Paste an NKN address first'); return; }
-
-  if (!myClient || !myAddress) { showToast('Not connected to NKN yet'); return; }
-
-  remotes.set(addr, { address: addr, label, card: null });
-  renderAgentList();
-
-  log('sys', `Requesting agent card from ${shorten(addr)}…`);
-  await send(addr, { type: 'agent_card_request' });
-  document.getElementById('remote-addr').value  = '';
-  document.getElementById('remote-label').value = '';
+function handleTaskUpdate(task) {
+  const p = pending.get(task.id);
+  if (!p) return;
+  Object.assign(p.taskRef, {state:task.state, result:task.result, error:task.error});
+  renderTasks();
+  if (task.state==='working') { clearTimeout(p.timer); p.timer=p.startTimer(); }
+  else if (task.state==='completed') { clearTimeout(p.timer); pending.delete(task.id); p.resolve(task.result); }
+  else if (task.state==='failed')    { clearTimeout(p.timer); pending.delete(task.id); p.reject(new Error(task.error)); }
 }
 
-function storeRemoteCard(address, card) {
-  const existing = remotes.get(address) ?? { address, label: shorten(address) };
-  existing.card = card;
-  if (card?.name) existing.label = card.name;
-  remotes.set(address, existing);
-  renderAgentList();
-  renderTaskTargets();
-  log('sys', `Got agent card for "${existing.label}"`);
-  showToast(`Connected: ${existing.label}`);
-}
+function addTask(task) { taskLog.unshift(task); renderTasks(); }
 
-// ── UI rendering ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Rendering
+// ─────────────────────────────────────────────────────────────────────────────
 
-function setStatus(state) {
-  const dot   = document.getElementById('status-dot');
-  const label = document.getElementById('status-label');
-  dot.className = 'status-dot ' + state;
-  label.textContent = state === 'connected' ? 'Connected to NKN' :
-                      state === 'connecting' ? 'Connecting to NKN…' : 'Disconnected';
-}
-
-function updateMyCard() {
-  document.getElementById('my-address').childNodes[0].textContent = myAddress;
-  document.getElementById('card-name').textContent = 'Browser Agent';
-  const el = document.getElementById('card-skills');
-  el.innerHTML = '';
-  for (const [id] of skills) {
-    const p = document.createElement('span');
-    p.className = 'skill-pill';
-    p.textContent = id;
-    el.appendChild(p);
-  }
-  renderCapabilities();
+function renderMySkills() {
+  document.getElementById('my-skills').innerHTML =
+    Object.keys(mySkills).map(id=>`<span class="skill-pill">${id}</span>`).join('');
 }
 
 function renderAgentList() {
-  const el    = document.getElementById('agent-list');
-  const count = document.getElementById('agent-count');
-  count.textContent = `(${remotes.size})`;
-
-  if (remotes.size === 0) {
-    el.innerHTML = '<div class="empty-state">No agents connected yet</div>';
-    return;
-  }
-
-  el.innerHTML = '';
-  for (const [addr, remote] of remotes) {
-    const div = document.createElement('div');
-    div.className = 'agent-item';
-    div.onclick = () => selectAgent(addr);
-
-    const skills = remote.card?.skills ?? [];
-    div.innerHTML = `
-      <div class="agent-name">${esc(remote.label)}</div>
-      <div class="agent-addr">${esc(addr)}</div>
-      <div class="agent-skills">${skills.map(s =>
-        `<span class="skill-pill">${esc(s.id)}</span>`).join('')}
-      </div>`;
-    el.appendChild(div);
+  const el = document.getElementById('agent-list');
+  document.getElementById('agent-count').textContent = `(${remotes.size})`;
+  if (!remotes.size) { el.innerHTML='<div class="empty">None yet</div>'; return; }
+  el.innerHTML='';
+  for (const [id, r] of remotes) {
+    const d=document.createElement('div'); d.className='agent-item';
+    d.innerHTML=`<div class="name">${esc(r.label)}</div><div class="addr">${esc(id)}</div><div style="margin-top:6px">${(r.card?.skills??[]).map(s=>`<span class="skill-pill">${esc(s.id)}</span>`).join('')}</div>`;
+    d.onclick=()=>{ document.getElementById('task-target').value=id; switchTab('tasks',document.querySelector('.tab')); };
+    el.appendChild(d);
   }
 }
 
-function selectAgent(addr) {
-  document.querySelectorAll('.agent-item').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  document.getElementById('task-target').value = addr;
-  switchTab('tasks', document.querySelectorAll('.tab')[0]);
-}
-
-function renderTaskTargets() {
-  const sel = document.getElementById('task-target');
-  sel.innerHTML = remotes.size === 0
-    ? '<option value="">— connect an agent first —</option>'
-    : Array.from(remotes.values()).map(r =>
-        `<option value="${esc(r.address)}">${esc(r.label)}</option>`
-      ).join('');
+function renderTargets() {
+  const sel=document.getElementById('task-target');
+  sel.innerHTML=remotes.size===0?'<option value="">— connect an agent first —</option>':
+    Array.from(remotes.entries()).map(([id,r])=>`<option value="${esc(id)}">${esc(r.label)}</option>`).join('');
 }
 
 function renderTasks() {
-  const el  = document.getElementById('task-history');
-  const all = [...tasks, ...inbound].sort((a, b) => 0);  // newest first already
-
-  if (all.length === 0) {
-    el.innerHTML = '<div class="empty-state">No tasks yet</div>';
-    return;
-  }
-
-  el.innerHTML = all.slice(0, 30).map(t => {
-    const dir    = t.direction === 'out' ? '↑ sent' : '↓ received';
-    const peer   = t.direction === 'out' ? shorten(t.to) : shorten(t.from);
-    const detail = JSON.stringify(t.params ?? {}).slice(0, 80);
-    const result = t.result ? JSON.stringify(t.result).slice(0, 120) : t.error ?? '';
-    return `<div class="task-item">
-      <div class="task-header">
-        <span class="task-skill">${esc(t.skill)}</span>
-        <span class="badge ${t.state}">${t.state}</span>
-      </div>
-      <div class="task-direction">${dir} · ${esc(peer)}</div>
-      <div class="task-detail">${esc(detail)}</div>
-      ${result ? `<div class="task-result">${esc(result)}</div>` : ''}
-    </div>`;
-  }).join('');
+  const el=document.getElementById('task-history');
+  if (!taskLog.length) { el.innerHTML='<div class="empty">No tasks yet</div>'; return; }
+  el.innerHTML=taskLog.slice(0,30).map(t=>`
+    <div class="task-item">
+      <div class="task-head"><span class="task-skill">${esc(t.skill)}</span><span class="badge ${t.state}">${t.state}</span></div>
+      <div class="task-dir">${t.direction==='out'?'↑ sent':'↓ received'} · ${esc((t.to||t.from||'').slice(0,14))}…</div>
+      <div class="task-data">${esc(JSON.stringify(t.params||{}).slice(0,80))}</div>
+      ${t.result?`<div class="task-res">${esc(JSON.stringify(t.result).slice(0,120))}</div>`:''}
+    </div>`).join('');
 }
 
-function renderCapabilities() {
-  const el = document.getElementById('cap-list');
-  el.innerHTML = Array.from(skills.values()).map(s => `
-    <div class="cap-item">
-      <div class="cap-header">
-        <span class="skill-pill">${esc(s.id)}</span>
-        <span class="cap-name">${esc(s.name)}</span>
-      </div>
-      <div class="cap-desc">${esc(s.description)}</div>
-      <div class="cap-code">// registered with capability({ skill: '${esc(s.id)}' })\n${esc(s.codeSnippet)}</div>
-    </div>
-  `).join('');
-}
-
-// ── Task sending ───────────────────────────────────────────────────────────
-
-async function sendTask() {
-  const addr  = document.getElementById('task-target').value;
-  const skill = document.getElementById('task-skill').value.trim();
-  const raw   = document.getElementById('task-params').value.trim();
-
-  if (!addr)  { showToast('Select a target agent'); return; }
-  if (!skill) { showToast('Enter a skill ID'); return; }
-
-  let params;
-  try { params = JSON.parse(raw || '{}'); }
-  catch { showToast('Params must be valid JSON'); return; }
-
-  try {
-    const result = await invoke(addr, skill, params);
-    showToast(`✓ ${skill} completed`);
-    log('sys', `Task "${skill}" completed: ${JSON.stringify(result).slice(0, 80)}`);
-  } catch (err) {
-    showToast(`✗ ${err.message}`);
-    log('err', `Task "${skill}" failed: ${err.message}`);
-  }
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
 function switchTab(name, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('pane-'+name).classList.add('active');
 }
 
-function copyAddress() {
-  if (!myAddress) return;
-  navigator.clipboard.writeText(myAddress).then(() => showToast('Address copied!'));
+function slog(type, text) {
+  const el=document.getElementById('log');
+  const d=document.createElement('div'); d.className='ll l'+type[0];
+  d.textContent=`[${new Date().toLocaleTimeString()}] ${text}`; el.prepend(d);
+  while(el.children.length>200) el.removeChild(el.lastChild);
 }
 
-function shorten(addr) {
-  if (!addr) return '?';
-  return addr.length > 20 ? addr.slice(0, 8) + '…' + addr.slice(-8) : addr;
-}
+let toastT;
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500); }
+function copyAddr() { if(!myAddr)return; navigator.clipboard.writeText(myAddr); toast('Peer ID copied!'); }
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function esc(s) {
-  return String(s ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-function log(type, text) {
-  const el   = document.getElementById('log-output');
-  const line = document.createElement('div');
-  line.className = 'log-line log-' + type;
-  const now  = new Date().toLocaleTimeString();
-  line.textContent = `[${now}] ${text}`;
-  el.prepend(line);
-  // keep at most 200 lines
-  while (el.children.length > 200) el.removeChild(el.lastChild);
-}
-
-function clearLog() {
-  document.getElementById('log-output').innerHTML = '';
-}
-
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-// ── Boot ───────────────────────────────────────────────────────────────────
-init();
+start();
 </script>
 </body>
 </html>

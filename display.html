@@ -7,110 +7,51 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-      overflow: hidden;
-      background: #0f1117;
-      font-family: system-ui, sans-serif;
-      transition: background 1s ease;
-    }
+    body { overflow: hidden; background: #0f1117; font-family: system-ui, sans-serif; }
 
-    canvas {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-    }
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; }
 
-    /* Message overlay */
-    #message-overlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 10;
-    }
-    #message-text {
-      font-size: clamp(32px, 6vw, 80px);
-      font-weight: 800;
-      letter-spacing: -1px;
-      text-align: center;
-      padding: 20px 40px;
-      opacity: 0;
-      transform: scale(0.8);
-      transition: opacity .3s ease, transform .3s ease;
-      text-shadow: 0 0 40px currentColor;
-      max-width: 90vw;
-      word-break: break-word;
-    }
-    #message-text.visible {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    /* Flash layer */
     #flash {
-      position: fixed;
-      inset: 0;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 20;
+      position: fixed; inset: 0; opacity: 0; pointer-events: none; z-index: 20;
       transition: opacity .05s;
     }
 
-    /* Status pill */
-    #status-pill {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 30;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
+    #message-overlay {
+      position: fixed; inset: 0; display: flex; align-items: center;
+      justify-content: center; pointer-events: none; z-index: 10;
+    }
+    #message-text {
+      font-size: clamp(32px, 6vw, 80px); font-weight: 800; letter-spacing: -1px;
+      text-align: center; padding: 20px 40px; opacity: 0;
+      transform: scale(.85); transition: opacity .3s, transform .3s;
+      text-shadow: 0 0 40px currentColor; max-width: 90vw; word-break: break-word;
+    }
+    #message-text.show { opacity: 1; transform: scale(1); }
+
+    #hud {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px;
       transition: opacity .5s;
     }
-    #status-pill.hide { opacity: 0; pointer-events: none; }
+    #hud.fade { opacity: 0; pointer-events: none; }
 
     .pill {
-      background: rgba(0,0,0,.65);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 40px;
-      padding: 8px 16px;
-      font-size: 12px;
-      color: rgba(255,255,255,.7);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: border-color .2s;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.12); border-radius: 40px;
+      padding: 8px 16px; font-size: 12px; color: rgba(255,255,255,.7);
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; transition: border-color .2s;
+      user-select: none;
     }
-    .pill:hover { border-color: rgba(255,255,255,.4); }
-    .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #f59e0b;
-    }
-    .dot.connected { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
-    #address-text {
-      font-family: monospace;
-      font-size: 11px;
-      max-width: 260px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .scene-label {
-      background: rgba(0,0,0,.4);
-      backdrop-filter: blur(8px);
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 11px;
-      color: rgba(255,255,255,.4);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+    .pill:hover { border-color: rgba(255,255,255,.35); }
+
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
+    .dot.ready { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+
+    .scene-badge {
+      background: rgba(0,0,0,.4); backdrop-filter: blur(8px);
+      border-radius: 20px; padding: 3px 12px; font-size: 11px;
+      color: rgba(255,255,255,.35); letter-spacing: 1px; text-transform: uppercase;
     }
   </style>
 </head>
@@ -118,20 +59,17 @@
 
 <canvas id="c"></canvas>
 <div id="flash"></div>
+<div id="message-overlay"><div id="message-text"></div></div>
 
-<div id="message-overlay">
-  <div id="message-text">Hello!</div>
-</div>
-
-<div id="status-pill">
-  <div class="pill" onclick="copyAddress()" title="Click to copy address">
+<div id="hud">
+  <div class="pill" id="addr-pill" onclick="copyAddress()">
     <div class="dot" id="dot"></div>
-    <span id="address-text">Connecting to NKN…</span>
+    <span id="addr-label">Starting…</span>
   </div>
-  <div class="scene-label" id="scene-label">none</div>
+  <div class="scene-badge" id="scene-badge">particles</div>
 </div>
 
-<script src="https://unpkg.com/nkn-sdk/dist/nkn.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
 // Canvas engine
@@ -139,8 +77,13 @@
 
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
-
 let W, H;
+
+const state = { scene: 'particles', bg: '#0f1117', speed: 1, intensity: 1 };
+
+let particles = [], matrixCols = [], auroraBlobs = [], shapes = [],
+    fireworks = [], bubbles = [], waveT = 0;
+
 function resize() {
   W = canvas.width  = window.innerWidth;
   H = canvas.height = window.innerHeight;
@@ -148,143 +91,27 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-// ── State ──────────────────────────────────────────────────────────────────
-
-let state = {
-  scene:     'particles',
-  bgColor:   '#0f1117',
-  accent:    '#6c63ff',
-  speed:     1,
-  intensity: 1,
-};
-
-// ── Scene objects ──────────────────────────────────────────────────────────
-
-let particles   = [];
-let matrix      = { cols: [], chars: '0123456789ABCDEFアイウエオカキクケコサシスセソタチツテトナニヌネノ'.split('') };
-let auroraBlobs = [];
-let shapes      = [];
-let fireworks   = [];
-let bubbles     = [];
-let waveT       = 0;
-
 function initScene() {
-  particles   = [];
-  matrix.cols = [];
-  auroraBlobs = [];
-  shapes      = [];
-  fireworks   = [];
-  bubbles     = [];
-
-  if (state.scene === 'particles') {
-    for (let i = 0; i < 120; i++) particles.push(mkParticle());
-  }
-  if (state.scene === 'matrix') {
-    const cols = Math.floor(W / 18);
-    for (let i = 0; i < cols; i++) {
-      matrix.cols.push({ x: i * 18 + 9, y: Math.random() * -H, speed: 1 + Math.random() * 2 });
-    }
-  }
-  if (state.scene === 'aurora') {
-    for (let i = 0; i < 5; i++) auroraBlobs.push(mkAuroraBlob(i));
-  }
-  if (state.scene === 'geometric') {
-    for (let i = 0; i < 8; i++) shapes.push(mkShape(i));
-  }
-  if (state.scene === 'bubbles') {
-    for (let i = 0; i < 40; i++) bubbles.push(mkBubble());
-  }
+  particles = []; matrixCols = []; auroraBlobs = []; shapes = []; fireworks = []; bubbles = [];
+  if (state.scene === 'particles')  for (let i=0;i<120;i++) particles.push(mkParticle());
+  if (state.scene === 'matrix')     for (let i=0;i<Math.floor(W/18);i++) matrixCols.push({ x:i*18+9, y:Math.random()*-H, speed:1+Math.random()*2 });
+  if (state.scene === 'aurora')     for (let i=0;i<5;i++) auroraBlobs.push(mkBlob(i));
+  if (state.scene === 'geometric')  for (let i=0;i<8;i++) shapes.push(mkShape());
+  if (state.scene === 'bubbles')    for (let i=0;i<40;i++) bubbles.push(mkBubble());
 }
 
-function mkParticle() {
-  return {
-    x: Math.random() * W,
-    y: Math.random() * H,
-    r: 1.5 + Math.random() * 4,
-    vx: (Math.random() - .5) * .8,
-    vy: (Math.random() - .5) * .8,
-    hue: Math.random() * 360,
-    alpha: .4 + Math.random() * .6,
-  };
-}
-
-function mkAuroraBlob(i) {
-  const colors = ['#6c63ff','#00d4aa','#f59e0b','#ec4899','#22c55e'];
-  return {
-    x: (W / 4) * i + W / 8,
-    y: H * .3 + Math.random() * H * .3,
-    rx: 200 + Math.random() * 300,
-    ry: 100 + Math.random() * 150,
-    color: colors[i % colors.length],
-    vx: (.3 + Math.random() * .4) * (Math.random() > .5 ? 1 : -1),
-    vy: (.1 + Math.random() * .2) * (Math.random() > .5 ? 1 : -1),
-    rot: 0,
-    rotSpeed: (.002 + Math.random() * .003) * (Math.random() > .5 ? 1 : -1),
-  };
-}
-
-function mkShape(i) {
-  const sides = [3, 4, 5, 6, 8][Math.floor(Math.random() * 5)];
-  return {
-    x: Math.random() * W,
-    y: Math.random() * H,
-    r: 30 + Math.random() * 80,
-    sides,
-    rot: Math.random() * Math.PI * 2,
-    rotSpeed: (.003 + Math.random() * .008) * (Math.random() > .5 ? 1 : -1),
-    hue: Math.random() * 360,
-    alpha: .12 + Math.random() * .2,
-    stroke: Math.random() > .5,
-  };
-}
-
-function mkBubble() {
-  return {
-    x: Math.random() * W,
-    y: H + Math.random() * 100,
-    r: 10 + Math.random() * 40,
-    speed: .5 + Math.random() * 1.5,
-    wobble: Math.random() * Math.PI * 2,
-    hue: Math.random() * 360,
-  };
-}
-
-function spawnFirework(x, y) {
-  const hue = Math.random() * 360;
-  for (let i = 0; i < 60; i++) {
-    const angle = (i / 60) * Math.PI * 2;
-    const speed = 2 + Math.random() * 5;
-    fireworks.push({
-      x, y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      alpha: 1,
-      hue: hue + Math.random() * 40 - 20,
-      r: 2 + Math.random() * 3,
-    });
-  }
-}
-
-// ── Draw loop ──────────────────────────────────────────────────────────────
+const mkParticle = () => ({ x:Math.random()*W, y:Math.random()*H, r:1.5+Math.random()*4, vx:(Math.random()-.5)*.8, vy:(Math.random()-.5)*.8, hue:Math.random()*360, a:.4+Math.random()*.6 });
+const mkBlob = i => { const c=['#6c63ff','#00d4aa','#f59e0b','#ec4899','#22c55e'][i]; return { x:(W/4)*i+W/8, y:H*.3+Math.random()*H*.3, rx:200+Math.random()*300, ry:100+Math.random()*150, color:c, vx:(.3+Math.random()*.4)*(Math.random()>.5?1:-1), vy:(.1+Math.random()*.2)*(Math.random()>.5?1:-1), rot:0, rs:(.002+Math.random()*.003)*(Math.random()>.5?1:-1) }; };
+const mkShape = () => ({ x:Math.random()*W, y:Math.random()*H, r:30+Math.random()*80, sides:[3,4,5,6,8][Math.floor(Math.random()*5)], rot:Math.random()*Math.PI*2, rs:(.003+Math.random()*.008)*(Math.random()>.5?1:-1), hue:Math.random()*360, a:.1+Math.random()*.2, stroke:Math.random()>.5 });
+const mkBubble = () => ({ x:Math.random()*W, y:H+Math.random()*100, r:10+Math.random()*40, speed:.5+Math.random()*1.5, wobble:Math.random()*Math.PI*2, hue:Math.random()*360 });
 
 function draw() {
   requestAnimationFrame(draw);
-
   const s = state.speed;
 
-  // Background
-  if (state.scene === 'aurora') {
-    ctx.fillStyle = '#050810';
-    ctx.fillRect(0, 0, W, H);
-    drawAurora();
-  } else if (state.scene === 'matrix') {
-    ctx.fillStyle = 'rgba(0,0,0,.07)';
-    ctx.fillRect(0, 0, W, H);
-    drawMatrix(s);
-  } else {
-    ctx.fillStyle = state.bgColor;
-    ctx.fillRect(0, 0, W, H);
-  }
+  if (state.scene === 'aurora') { ctx.fillStyle='#050810'; ctx.fillRect(0,0,W,H); drawAurora(); }
+  else if (state.scene === 'matrix') { ctx.fillStyle='rgba(0,0,0,.07)'; ctx.fillRect(0,0,W,H); drawMatrix(s); }
+  else { ctx.fillStyle=state.bg; ctx.fillRect(0,0,W,H); }
 
   if (state.scene === 'particles')  drawParticles(s);
   if (state.scene === 'waves')      drawWaves(s);
@@ -295,417 +122,232 @@ function draw() {
 
 function drawParticles(s) {
   for (const p of particles) {
-    p.x += p.vx * s;
-    p.y += p.vy * s;
-    if (p.x < 0) p.x = W;
-    if (p.x > W) p.x = 0;
-    if (p.y < 0) p.y = H;
-    if (p.y > H) p.y = 0;
-
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = `hsla(${p.hue},80%,65%,${p.alpha})`;
-    ctx.fill();
+    p.x+=p.vx*s; p.y+=p.vy*s;
+    if (p.x<0) p.x=W; if (p.x>W) p.x=0; if (p.y<0) p.y=H; if (p.y>H) p.y=0;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${p.hue},80%,65%,${p.a})`; ctx.fill();
   }
-  // Draw connections
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i + 1; j < particles.length; j++) {
-      const dx = particles[i].x - particles[j].x;
-      const dy = particles[i].y - particles[j].y;
-      const d  = Math.sqrt(dx*dx + dy*dy);
-      if (d < 120) {
-        ctx.beginPath();
-        ctx.moveTo(particles[i].x, particles[i].y);
-        ctx.lineTo(particles[j].x, particles[j].y);
-        ctx.strokeStyle = `rgba(255,255,255,${.12 * (1 - d/120)})`;
-        ctx.lineWidth = .5;
-        ctx.stroke();
-      }
-    }
+  for (let i=0;i<particles.length;i++) for (let j=i+1;j<particles.length;j++) {
+    const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y, d=Math.sqrt(dx*dx+dy*dy);
+    if (d<120) { ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.strokeStyle=`rgba(255,255,255,${.12*(1-d/120)})`; ctx.lineWidth=.5; ctx.stroke(); }
   }
 }
 
 function drawMatrix(s) {
-  ctx.font = '15px monospace';
-  ctx.fillStyle = '#00ff41';
-  for (const col of matrix.cols) {
-    const char = matrix.chars[Math.floor(Math.random() * matrix.chars.length)];
-    ctx.globalAlpha = .85;
-    ctx.fillText(char, col.x, col.y);
-    ctx.globalAlpha = 1;
-    col.y += col.speed * 16 * s;
-    if (col.y > H + 20) col.y = -20;
+  const chars='0123456789ABCDEFアイウエオカキクケコ'.split('');
+  ctx.font='15px monospace'; ctx.fillStyle='#00ff41';
+  for (const col of matrixCols) {
+    ctx.globalAlpha=.85; ctx.fillText(chars[Math.floor(Math.random()*chars.length)],col.x,col.y); ctx.globalAlpha=1;
+    col.y+=col.speed*16*s; if (col.y>H+20) col.y=-20;
   }
 }
 
 function drawAurora() {
   for (const b of auroraBlobs) {
-    b.x += b.vx;
-    b.y += b.vy;
-    b.rot += b.rotSpeed;
-    if (b.x < -b.rx) b.vx =  Math.abs(b.vx);
-    if (b.x > W+b.rx) b.vx = -Math.abs(b.vx);
-    if (b.y < -b.ry) b.vy =  Math.abs(b.vy);
-    if (b.y > H+b.ry) b.vy = -Math.abs(b.vy);
-
-    ctx.save();
-    ctx.translate(b.x, b.y);
-    ctx.rotate(b.rot);
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(b.rx, b.ry));
-    g.addColorStop(0,   b.color + 'AA');
-    g.addColorStop(.5,  b.color + '44');
-    g.addColorStop(1,   b.color + '00');
-    ctx.fillStyle = g;
-    ctx.scale(b.rx / b.ry, 1);
-    ctx.beginPath();
-    ctx.arc(0, 0, b.ry, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    b.x+=b.vx; b.y+=b.vy; b.rot+=b.rs;
+    if (b.x<-b.rx) b.vx=Math.abs(b.vx); if (b.x>W+b.rx) b.vx=-Math.abs(b.vx);
+    if (b.y<-b.ry) b.vy=Math.abs(b.vy); if (b.y>H+b.ry) b.vy=-Math.abs(b.vy);
+    ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.rot);
+    const g=ctx.createRadialGradient(0,0,0,0,0,Math.max(b.rx,b.ry));
+    g.addColorStop(0,b.color+'AA'); g.addColorStop(.5,b.color+'44'); g.addColorStop(1,b.color+'00');
+    ctx.fillStyle=g; ctx.scale(b.rx/b.ry,1); ctx.beginPath(); ctx.arc(0,0,b.ry,0,Math.PI*2); ctx.fill(); ctx.restore();
   }
 }
 
 function drawWaves(s) {
-  waveT += .015 * s;
-  const count = 6;
-  for (let w = 0; w < count; w++) {
-    ctx.beginPath();
-    const amp  = (40 + w * 20) * state.intensity;
-    const freq = .006 - w * .0005;
-    const hue  = (w / count) * 280 + 200;
-    ctx.moveTo(0, H * .5);
-    for (let x = 0; x <= W; x += 4) {
-      const y = H * .5
-        + Math.sin(x * freq + waveT + w) * amp
-        + Math.sin(x * freq * 1.7 + waveT * 1.3 + w * .5) * amp * .5;
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(W, H);
-    ctx.lineTo(0, H);
-    ctx.closePath();
-    ctx.fillStyle = `hsla(${hue},70%,55%,${.08 + w * .04})`;
-    ctx.fill();
+  waveT+=.015*s;
+  for (let w=0;w<6;w++) {
+    const amp=(40+w*20)*state.intensity, freq=.006-w*.0005, hue=(w/6)*280+200;
+    ctx.beginPath(); ctx.moveTo(0,H*.5);
+    for (let x=0;x<=W;x+=4) ctx.lineTo(x, H*.5+Math.sin(x*freq+waveT+w)*amp+Math.sin(x*freq*1.7+waveT*1.3+w*.5)*amp*.5);
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+    ctx.fillStyle=`hsla(${hue},70%,55%,${.08+w*.04})`; ctx.fill();
   }
 }
 
 function drawGeometric(s) {
   for (const sh of shapes) {
-    sh.rot += sh.rotSpeed * s;
-    ctx.save();
-    ctx.translate(sh.x, sh.y);
-    ctx.rotate(sh.rot);
-    ctx.beginPath();
-    for (let i = 0; i <= sh.sides; i++) {
-      const a = (i / sh.sides) * Math.PI * 2 - Math.PI / 2;
-      i === 0 ? ctx.moveTo(Math.cos(a)*sh.r, Math.sin(a)*sh.r)
-              : ctx.lineTo(Math.cos(a)*sh.r, Math.sin(a)*sh.r);
-    }
+    sh.rot+=sh.rs*s; ctx.save(); ctx.translate(sh.x,sh.y); ctx.rotate(sh.rot); ctx.beginPath();
+    for (let i=0;i<=sh.sides;i++) { const a=(i/sh.sides)*Math.PI*2-Math.PI/2; i===0?ctx.moveTo(Math.cos(a)*sh.r,Math.sin(a)*sh.r):ctx.lineTo(Math.cos(a)*sh.r,Math.sin(a)*sh.r); }
     ctx.closePath();
-    if (sh.stroke) {
-      ctx.strokeStyle = `hsla(${sh.hue},70%,65%,${sh.alpha * 2})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = `hsla(${sh.hue},60%,55%,${sh.alpha})`;
-      ctx.fill();
-    }
+    if (sh.stroke) { ctx.strokeStyle=`hsla(${sh.hue},70%,65%,${sh.a*2})`; ctx.lineWidth=2; ctx.stroke(); }
+    else { ctx.fillStyle=`hsla(${sh.hue},60%,55%,${sh.a})`; ctx.fill(); }
     ctx.restore();
   }
 }
 
 function drawFireworks(s) {
-  if (Math.random() < .04 * state.intensity) {
-    spawnFirework(Math.random() * W, Math.random() * H * .7);
+  if (Math.random()<.04*state.intensity) spawnFirework(Math.random()*W, Math.random()*H*.7);
+  for (let i=fireworks.length-1;i>=0;i--) {
+    const p=fireworks[i]; p.x+=p.vx*s; p.y+=p.vy*s; p.vy+=.06*s; p.a-=.012*s;
+    if (p.a<=0) { fireworks.splice(i,1); continue; }
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${p.hue},90%,65%,${p.a})`; ctx.fill();
   }
-  for (let i = fireworks.length - 1; i >= 0; i--) {
-    const p = fireworks[i];
-    p.x += p.vx * s;
-    p.y += p.vy * s;
-    p.vy += .06 * s;
-    p.alpha -= .012 * s;
-    if (p.alpha <= 0) { fireworks.splice(i, 1); continue; }
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = `hsla(${p.hue},90%,65%,${p.alpha})`;
-    ctx.fill();
-  }
+}
+
+function spawnFirework(x,y) {
+  const hue=Math.random()*360;
+  for (let i=0;i<60;i++) { const a=(i/60)*Math.PI*2, sp=2+Math.random()*5; fireworks.push({ x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,a:1,hue:hue+Math.random()*40-20,r:2+Math.random()*3 }); }
 }
 
 function drawBubbles(s) {
   for (const b of bubbles) {
-    b.y -= b.speed * s;
-    b.wobble += .03;
-    b.x += Math.sin(b.wobble) * .5;
-    if (b.y + b.r < 0) {
-      b.y = H + b.r;
-      b.x = Math.random() * W;
-    }
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    ctx.strokeStyle = `hsla(${b.hue},60%,70%,.4)`;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Shine
-    ctx.beginPath();
-    ctx.arc(b.x - b.r*.3, b.y - b.r*.3, b.r*.25, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,.3)`;
-    ctx.fill();
+    b.y-=b.speed*s; b.wobble+=.03; b.x+=Math.sin(b.wobble)*.5;
+    if (b.y+b.r<0) { b.y=H+b.r; b.x=Math.random()*W; }
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.strokeStyle=`hsla(${b.hue},60%,70%,.4)`; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(b.x-b.r*.3,b.y-b.r*.3,b.r*.25,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,.3)'; ctx.fill();
   }
 }
 
-// ── Flash effect ───────────────────────────────────────────────────────────
-
-function doFlash(color = '#ffffff', duration = 300) {
-  const el = document.getElementById('flash');
-  el.style.background = color;
-  el.style.transition = 'none';
-  el.style.opacity = '0.85';
-  setTimeout(() => {
-    el.style.transition = `opacity ${duration}ms ease`;
-    el.style.opacity = '0';
-  }, 50);
-}
-
-// ── Shake effect ───────────────────────────────────────────────────────────
-
-function doShake(intensity = 10, duration = 500) {
-  const el = document.body;
-  const start = Date.now();
-  const interval = setInterval(() => {
-    const t = Date.now() - start;
-    if (t > duration) { el.style.transform = ''; clearInterval(interval); return; }
-    const decay = 1 - t / duration;
-    const x = (Math.random() - .5) * intensity * decay;
-    const y = (Math.random() - .5) * intensity * decay;
-    el.style.transform = `translate(${x}px, ${y}px)`;
-  }, 16);
-}
-
-// ── Message overlay ────────────────────────────────────────────────────────
+// ── Effects ────────────────────────────────────────────────────────────────
 
 let msgTimer;
-function showMessage(text, color = '#ffffff', duration = 3000) {
-  const el = document.getElementById('message-text');
-  el.textContent = text;
-  el.style.color = color;
-  el.classList.add('visible');
-  clearTimeout(msgTimer);
-  msgTimer = setTimeout(() => el.classList.remove('visible'), duration);
+function showMessage(text, color='#ffffff', duration=3000) {
+  const el=document.getElementById('message-text');
+  el.textContent=text; el.style.color=color; el.classList.add('show');
+  clearTimeout(msgTimer); msgTimer=setTimeout(()=>el.classList.remove('show'), duration);
 }
 
-// ── Party mode ─────────────────────────────────────────────────────────────
-
-let partyInterval;
-function partyMode(duration = 6000) {
-  const scenes  = ['fireworks','particles','waves','aurora','geometric','bubbles'];
-  const colors  = ['#ff006e','#fb5607','#ffbe0b','#8338ec','#3a86ff','#06d6a0'];
-  let i = 0;
-  clearInterval(partyInterval);
-  partyInterval = setInterval(() => {
-    applyScene(scenes[i % scenes.length]);
-    doFlash(colors[i % colors.length], 200);
-    state.speed = 1.5 + Math.random() * 1.5;
-    state.intensity = 1.5;
-    i++;
-  }, duration / 8);
-  setTimeout(() => clearInterval(partyInterval), duration);
+function doFlash(color='#ffffff', duration=300) {
+  const el=document.getElementById('flash');
+  el.style.background=color; el.style.transition='none'; el.style.opacity='.85';
+  setTimeout(()=>{ el.style.transition=`opacity ${duration}ms`; el.style.opacity='0'; },50);
 }
 
-// ── Apply commands ─────────────────────────────────────────────────────────
+function doShake(intensity=10, duration=500) {
+  const start=Date.now();
+  const id=setInterval(()=>{
+    const t=Date.now()-start; if(t>duration){document.body.style.transform='';clearInterval(id);return;}
+    const d=1-t/duration; document.body.style.transform=`translate(${(Math.random()-.5)*intensity*d}px,${(Math.random()-.5)*intensity*d}px)`;
+  },16);
+}
+
+let partyTimer;
+function partyMode(duration=6000) {
+  const scenes=['fireworks','particles','waves','aurora','geometric','bubbles'];
+  const colors=['#ff006e','#fb5607','#ffbe0b','#8338ec','#3a86ff','#06d6a0'];
+  let i=0; clearInterval(partyTimer);
+  partyTimer=setInterval(()=>{ applyScene(scenes[i%scenes.length]); doFlash(colors[i%colors.length],200); state.speed=1.5+Math.random()*1.5; i++; }, duration/8);
+  setTimeout(()=>clearInterval(partyTimer), duration);
+}
 
 function applyScene(scene) {
-  state.scene = scene;
+  state.scene=scene;
+  const bgs={particles:'#0f1117',matrix:'#000',waves:'#0a0520',aurora:'#050810',geometric:'#0d0d14',fireworks:'#000814',bubbles:'#060d1f',none:state.bg};
+  state.bg=bgs[scene]??'#0f1117';
+  document.getElementById('scene-badge').textContent=scene;
   initScene();
-  document.getElementById('scene-label').textContent = scene;
-
-  // set a sensible bg per scene
-  const bgs = {
-    particles: '#0f1117', matrix: '#000', waves: '#0a0520',
-    aurora: '#050810',    geometric: '#0d0d14', fireworks: '#000814',
-    bubbles: '#060d1f',   none: state.bgColor,
-  };
-  state.bgColor = bgs[scene] ?? '#0f1117';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// A2A agent
+// A2A skill handlers
 // ─────────────────────────────────────────────────────────────────────────────
 
 const skills = {
-  set_scene: ({ scene }) => {
-    applyScene(scene);
-    return { ok: true, scene };
-  },
-
-  set_color: ({ color }) => {
-    state.bgColor = color;
-    state.accent  = color;
-    document.body.style.background = color;
-    return { ok: true, color };
-  },
-
-  set_theme: ({ theme }) => {
-    const themes = {
-      dark:   { bg: '#0f1117', accent: '#6c63ff' },
-      neon:   { bg: '#05000f', accent: '#ff00ff' },
-      sunset: { bg: '#1a0500', accent: '#ff6b35' },
-      ocean:  { bg: '#000d1a', accent: '#00d4aa' },
-      forest: { bg: '#000d04', accent: '#22c55e' },
-    };
-    const t = themes[theme] ?? themes.dark;
-    state.bgColor = t.bg;
-    state.accent  = t.accent;
-    return { ok: true, theme };
-  },
-
-  flash: ({ color = '#ffffff', duration = 300 } = {}) => {
-    doFlash(color, duration);
-    return { ok: true };
-  },
-
-  shake: ({ intensity = 10, duration = 500 } = {}) => {
-    doShake(intensity, duration);
-    return { ok: true };
-  },
-
-  show_message: ({ text, color = '#ffffff', duration = 3000 } = {}) => {
-    showMessage(text, color, duration);
-    return { ok: true };
-  },
-
-  set_speed: ({ value }) => {
-    state.speed = Math.max(0.1, Math.min(5, value));
-    return { ok: true, speed: state.speed };
-  },
-
-  set_intensity: ({ value }) => {
-    state.intensity = Math.max(0.1, Math.min(5, value));
-    return { ok: true };
-  },
-
-  party: ({ duration = 6000 } = {}) => {
-    partyMode(duration);
-    showMessage('🎉 PARTY! 🎉', '#ffbe0b', duration - 500);
-    return { ok: true };
-  },
-
-  reset: () => {
-    state = { scene: 'particles', bgColor: '#0f1117', accent: '#6c63ff', speed: 1, intensity: 1 };
-    applyScene('particles');
-    showMessage('', '#fff', 0);
-    return { ok: true };
-  },
-
-  ping: ({ message = 'ping' } = {}) => ({ echo: message, ts: Date.now() }),
-
-  agent_card: () => buildAgentCard(),
+  set_scene:     ({scene})              => { applyScene(scene); return {ok:true,scene}; },
+  set_color:     ({color})              => { state.bg=color; return {ok:true}; },
+  set_theme:     ({theme})              => { const t={dark:{bg:'#0f1117'},neon:{bg:'#05000f'},sunset:{bg:'#1a0500'},ocean:{bg:'#000d1a'},forest:{bg:'#000d04'}}[theme]??{bg:'#0f1117'}; state.bg=t.bg; return {ok:true}; },
+  flash:         ({color='#fff',duration=300}={})   => { doFlash(color,duration); return {ok:true}; },
+  shake:         ({intensity=10,duration=500}={})   => { doShake(intensity,duration); return {ok:true}; },
+  show_message:  ({text,color='#fff',duration=3000}={}) => { showMessage(text,color,duration); return {ok:true}; },
+  set_speed:     ({value})              => { state.speed=Math.max(.1,Math.min(5,value)); return {ok:true}; },
+  set_intensity: ({value})              => { state.intensity=Math.max(.1,Math.min(5,value)); return {ok:true}; },
+  party:         ({duration=6000}={})   => { partyMode(duration); showMessage('🎉 PARTY! 🎉','#ffbe0b',duration-500); return {ok:true}; },
+  reset:         ()                     => { state.speed=1; state.intensity=1; applyScene('particles'); return {ok:true}; },
+  ping:          ({message='ping'}={})  => ({ echo:message, ts:Date.now() }),
 };
 
-function buildAgentCard() {
+function agentCard(address) {
   return {
-    name: 'Display Agent',
-    description: 'Controls visual scenes and effects on the display',
-    url: `nkn://${myAddress ?? 'not-connected'}`,
-    version: '1.0',
-    capabilities: { streaming: false, pushNotifications: false },
-    skills: Object.entries(skillsMeta).map(([id, m]) => ({
-      id, ...m,
-      inputModes: ['application/json'], outputModes: ['application/json'],
-    })),
+    name:'Display Agent', description:'Controls visual scenes and effects',
+    url:`peer://${address}`, version:'1.0',
+    capabilities:{streaming:false,pushNotifications:false},
+    skills:Object.keys(skills).map(id=>({id,inputModes:['application/json'],outputModes:['application/json']})),
   };
 }
 
-const skillsMeta = {
-  set_scene:     { name: 'Set Scene',     description: 'Switch animation scene (particles|matrix|waves|aurora|geometric|fireworks|bubbles|none)' },
-  set_color:     { name: 'Set Color',     description: 'Set background color (#hex)' },
-  set_theme:     { name: 'Set Theme',     description: 'Apply a color theme (dark|neon|sunset|ocean|forest)' },
-  flash:         { name: 'Flash',         description: 'Flash the screen a color' },
-  shake:         { name: 'Shake',         description: 'Shake the screen' },
-  show_message:  { name: 'Show Message',  description: 'Show a text overlay' },
-  set_speed:     { name: 'Set Speed',     description: 'Set animation speed (0.1–5)' },
-  set_intensity: { name: 'Set Intensity', description: 'Set effect intensity (0.1–5)' },
-  party:         { name: 'Party',         description: 'Trigger party mode!' },
-  reset:         { name: 'Reset',         description: 'Reset to default state' },
-  ping:          { name: 'Ping',          description: 'Echo test' },
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// PeerJS transport
+// ─────────────────────────────────────────────────────────────────────────────
 
-// NKN client
-let myClient = null, myAddress = null;
+let peer, myAddress;
+const connections = new Map();
 
-const SEED_NODES = [
-  'https://mainnet-rpc-node-0001.nkn.org',
-  'https://mainnet-rpc-node-0002.nkn.org',
-  'https://mainnet-rpc-node-0003.nkn.org',
-  'https://mainnet-rpc-node-0004.nkn.org',
-];
+function send(peerId, msg) {
+  const conn = connections.get(peerId);
+  if (conn?.open) conn.send(JSON.stringify(msg));
+}
 
-function initNKN(seedIndex = 0) {
-  myClient = new nkn.Client({
-    seedRpcServerAddr: SEED_NODES[seedIndex % SEED_NODES.length],
-    connectRetries: 3,
-  });
+function wire(conn) {
+  connections.set(conn.peer, conn);
+  conn.on('data',  (raw) => handleMessage(conn.peer, typeof raw==='string'?raw:JSON.stringify(raw)));
+  conn.on('close', ()    => connections.delete(conn.peer));
+}
 
-  myClient.on('error', () => {
-    console.warn(`Seed ${seedIndex} failed, trying next…`);
-    myClient.close?.();
-    initNKN(seedIndex + 1);
-  });
+async function handleMessage(from, raw) {
+  let msg; try { msg=JSON.parse(raw); } catch { return; }
 
-  myClient.on('connect', () => {
-    myAddress = myClient.addr;
-    document.getElementById('dot').className = 'dot connected';
-    document.getElementById('address-text').textContent = myAddress;
+  if (msg.type === 'agent_card_request') {
+    send(from, { type:'agent_card_response', card:agentCard(myAddress) });
+    showHud();
+    return;
+  }
 
-    // Hide status pill after 8s
-    setTimeout(() => document.getElementById('status-pill').classList.add('hide'), 8000);
-    document.getElementById('status-pill').addEventListener('mouseenter', () =>
-      document.getElementById('status-pill').classList.remove('hide'));
-  });
+  if (msg.type === 'task') {
+    const { task } = msg;
+    const skill = skills[task.skill];
+    const reply = (state,extra={}) => send(from, { type:'task_update', task:{...task,state,...extra} });
 
-  myClient.on('message', async (msg) => {
-    let message;
-    try { message = JSON.parse(msg.payload.toString()); } catch { return; }
+    if (!skill) { reply('failed',{error:`Unknown skill: "${task.skill}"`}); return; }
+    reply('working');
+    try   { reply('completed', { result: await skill(task.params??{}) }); }
+    catch (e) { reply('failed', { error: e.message }); }
+  }
+}
 
-    const from = msg.src;
-
-    if (message.type === 'task') {
-      const task = message.task;
-      const skill = skills[task.skill];
-
-      const reply = (state, extra = {}) =>
-        myClient.send(from, JSON.stringify({ type: 'task_update', task: { ...task, state, ...extra } }), { noReply: true });
-
-      if (!skill) { await reply('failed', { error: `Unknown skill: "${task.skill}"` }); return; }
-
-      await reply('working');
-      try {
-        const result = await skill(task.params ?? {});
-        await reply('completed', { result });
-      } catch (err) {
-        await reply('failed', { error: err.message });
-      }
-    }
-
-    if (message.type === 'agent_card_request') {
-      myClient.send(from, JSON.stringify({ type: 'agent_card_response', card: buildAgentCard() }), { noReply: true });
-      // Show a subtle "connected" message
-      document.getElementById('status-pill').classList.remove('hide');
-      setTimeout(() => document.getElementById('status-pill').classList.add('hide'), 4000);
-    }
-  });
+function showHud() {
+  const hud = document.getElementById('hud');
+  hud.classList.remove('fade');
+  clearTimeout(showHud._t);
+  showHud._t = setTimeout(() => hud.classList.add('fade'), 5000);
 }
 
 function copyAddress() {
   if (!myAddress) return;
   navigator.clipboard.writeText(myAddress);
-  showMessage('Address copied!', '#6c63ff', 1500);
+  showMessage('Address copied!','#6c63ff',1500);
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
+
+function start() {
+  peer = new Peer({ config:{ iceServers:[
+    { urls:'stun:stun.l.google.com:19302' },
+    { urls:'stun:stun1.l.google.com:19302' },
+  ]}});
+
+  peer.on('open', (id) => {
+    myAddress = id;
+    document.getElementById('dot').className = 'dot ready';
+    document.getElementById('addr-label').textContent = id;
+    showHud();
+  });
+
+  peer.on('connection', wire);
+
+  peer.on('error', (err) => {
+    document.getElementById('addr-label').textContent = 'Error: ' + err.type;
+    console.error('PeerJS error:', err);
+  });
+}
+
 resize();
 draw();
 applyScene('particles');
-initNKN();
+start();
 </script>
 </body>
 </html>
