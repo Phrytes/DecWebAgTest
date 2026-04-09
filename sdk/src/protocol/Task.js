@@ -6,6 +6,7 @@ export const TaskState = Object.freeze({
   COMPLETED:  'completed',
   FAILED:     'failed',
   CANCELLED:  'cancelled',
+  REJECTED:   'rejected',
 });
 
 export class Task {

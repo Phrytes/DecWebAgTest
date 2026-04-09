@@ -9,11 +9,19 @@ import { Task, TaskState } from './protocol/Task.js';
  *                        function; AgentApp scans and calls register() for you.
  */
 export class Agent {
-  constructor({ id, name, description = '', transport }) {
-    this.id          = id;
-    this.name        = name;
-    this.description = description;
-    this.transport   = transport;
+  /**
+   * @param {object} options
+   * @param {Function} [options.acceptancePolicy]
+   *   async (fromAddress, task) => true | false | { accepted: bool, reason: string }
+   *   Return false (or { accepted: false }) to reject the task before work starts.
+   *   Omit to auto-accept all tasks.
+   */
+  constructor({ id, name, description = '', transport, acceptancePolicy = null }) {
+    this.id               = id;
+    this.name             = name;
+    this.description      = description;
+    this.transport        = transport;
+    this._acceptancePolicy = acceptancePolicy;
 
     this._skills     = new Map();   // skillId -> { handler, meta }
     this._pending    = new Map();   // taskId  -> { resolve, reject, timer }
@@ -101,6 +109,15 @@ export class Agent {
       return reply(TaskState.FAILED, { error: `Unknown skill: "${task.skill}"` });
     }
 
+    if (this._acceptancePolicy) {
+      const decision = await this._acceptancePolicy(from, task);
+      const accepted = typeof decision === 'object' ? decision.accepted : !!decision;
+      const reason   = typeof decision === 'object' ? decision.reason   : undefined;
+      if (!accepted) {
+        return reply(TaskState.REJECTED, { error: reason ?? 'Rejected by agent policy' });
+      }
+    }
+
     await reply(TaskState.WORKING);
 
     try {
@@ -123,7 +140,11 @@ export class Agent {
       clearTimeout(pending.timer);
       this._pending.delete(taskData.id);
       pending.reject(new Error(taskData.error));
+    } else if (taskData.state === TaskState.REJECTED) {
+      clearTimeout(pending.timer);
+      this._pending.delete(taskData.id);
+      pending.reject(new Error(`Task rejected: ${taskData.error ?? 'no reason given'}`));
     }
-    // WORKING state: no action needed, just waiting
+    // WORKING state: timer reset handled by caller if needed
   }
 }
