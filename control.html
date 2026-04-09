@@ -531,13 +531,15 @@ async function sendCmd(skill, params = {}) {
   const task = { id, skill, params, state: 'submitted' };
 
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      pending.delete(id);
-      log('err', `Timeout: ${skill}`);
-      reject(new Error('timeout'));
-    }, 10000);
+    function startTimer() {
+      return setTimeout(() => {
+        pending.delete(id);
+        log('err', `Timeout: ${skill}`);
+        reject(new Error('timeout'));
+      }, 30000);
+    }
 
-    pending.set(id, { resolve, reject, timer, skill });
+    pending.set(id, { resolve, reject, timer: startTimer(), skill, startTimer });
     myClient.send(displayAddress, JSON.stringify({ type: 'task', task }));
     log('out', `→ ${skill}(${JSON.stringify(params).slice(0, 60)})`);
   });
@@ -546,7 +548,12 @@ async function sendCmd(skill, params = {}) {
 function handleTaskUpdate(task) {
   const p = pending.get(task.id);
   if (!p) return;
-  if (task.state === 'completed') {
+
+  if (task.state === 'working') {
+    // Display acknowledged — reset the timer so slow skills don't time out
+    clearTimeout(p.timer);
+    p.timer = p.startTimer();
+  } else if (task.state === 'completed') {
     clearTimeout(p.timer);
     pending.delete(task.id);
     log('ok', `✓ ${p.skill}: ${JSON.stringify(task.result ?? {}).slice(0, 60)}`);
