@@ -126,6 +126,15 @@
     </div>
 
     <div class="section">
+      <div class="sec-title">My Address</div>
+      <div id="my-id-display" onclick="copyAddr()" title="Click to copy"
+           style="font-family:monospace;font-size:10px;color:var(--muted);word-break:break-all;cursor:pointer;margin-bottom:8px;line-height:1.5">—</div>
+      <input id="custom-id-input" placeholder="Custom ID (letters, numbers, -)" />
+      <div style="height:6px"></div>
+      <button class="btn ghost" style="font-size:12px" onclick="applyCustomId()">Use this ID →</button>
+    </div>
+
+    <div class="section">
       <div class="sec-title">Connect Peer</div>
       <input id="connect-input" placeholder="Paste Peer ID…" />
       <div style="height:8px"></div>
@@ -322,16 +331,20 @@ function evaluatePolicy(policy, fromId, task) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function start() {
-  peer = new Peer({ config: { iceServers: [
+  const savedId = localStorage.getItem('demo_agent_id');
+  const opts    = { config: { iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-  ]}});
+  ]}};
+  peer = savedId ? new Peer(savedId, opts) : new Peer(opts);
 
   peer.on('open', (id) => {
     myAddress = id;
+    localStorage.setItem('demo_agent_id', id);
     document.getElementById('dot').className = 'dot ready';
     document.getElementById('my-addr').textContent = id.slice(0,8)+'…'+id.slice(-6);
-    log('sys', `Ready as "${activeProfile.name}" — ${id.slice(0,16)}…`);
+    document.getElementById('my-id-display').textContent = id;
+    log('sys', `Ready as "${activeProfile.name}" (${id.slice(0,20)}…)`);
   });
 
   // Incoming connection
@@ -607,24 +620,49 @@ function switchProfile(profileId) {
   const profile = PROFILES.find(p => p.id === profileId);
   if (!profile || profile.id === activeProfile.id) return;
 
-  // Reject all pending manual tasks before switching
+  // Reject all pending manual tasks
   for (const [, p] of pendingTasks)
     p.reply('rejected', { error: 'Agent switched profile' });
   pendingTasks.clear();
 
-  // Disconnect old peer
+  activeProfile = profile;
+
+  // Keep the peer and all connections — just push the updated card to everyone
+  for (const peerId of connections.keys())
+    send(peerId, { type: 'agent_card_response', card: myCard() });
+
+  renderAll();
+  log('sys', `— Switched to "${profile.name}" — updated ${connections.size} peer(s)`);
+}
+
+function applyCustomId() {
+  const raw = document.getElementById('custom-id-input').value.trim();
+  if (!raw) { toast('Enter an ID first'); return; }
+  if (!/^[a-zA-Z0-9_-]{1,72}$/.test(raw)) {
+    toast('Use letters, numbers, hyphens or underscores (max 72 chars)');
+    return;
+  }
+
+  localStorage.setItem('demo_agent_id', raw);
+
+  // Reject pending tasks and drop connections — ID change requires a new peer
+  for (const [, p] of pendingTasks)
+    p.reply('rejected', { error: 'Agent restarting with new ID' });
+  pendingTasks.clear();
+
   if (peer) { peer.destroy(); peer = null; myAddress = null; }
   connections.clear();
   for (const e of knownPeers.values()) e.connected = false;
 
-  activeProfile = profile;
-
   document.getElementById('dot').className = 'dot warn';
   document.getElementById('my-addr').textContent = '—';
+  document.getElementById('my-id-display').textContent = '—';
+  document.getElementById('custom-id-input').value = '';
 
-  renderAll();
+  renderPeers();
+  updateTargetDropdown();
   start();
-  log('sys', `— Switched to "${profile.name}" —`);
+  log('sys', `Restarting with custom ID: ${raw}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
