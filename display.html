@@ -632,10 +632,23 @@ const skillsMeta = {
 // NKN client
 let myClient = null, myAddress = null;
 
-function initNKN() {
+const SEED_NODES = [
+  'https://mainnet-rpc-node-0001.nkn.org',
+  'https://mainnet-rpc-node-0002.nkn.org',
+  'https://mainnet-rpc-node-0003.nkn.org',
+  'https://mainnet-rpc-node-0004.nkn.org',
+];
+
+function initNKN(seedIndex = 0) {
   myClient = new nkn.Client({
-    seedRpcServerAddr: 'https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet',
-    connectRetries: 10,
+    seedRpcServerAddr: SEED_NODES[seedIndex % SEED_NODES.length],
+    connectRetries: 3,
+  });
+
+  myClient.on('error', () => {
+    console.warn(`Seed ${seedIndex} failed, trying next…`);
+    myClient.close?.();
+    initNKN(seedIndex + 1);
   });
 
   myClient.on('connect', () => {
