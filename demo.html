@@ -126,7 +126,7 @@
        style="background:var(--surf);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;max-width:280px">
     <div style="font-size:13px;font-weight:600;margin-bottom:4px">Scan to connect</div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Opens this page on the other device and auto-connects</div>
-    <canvas id="qr-canvas"></canvas>
+    <img id="qr-img" width="200" height="200" style="border-radius:8px;display:block" />
     <div style="margin-top:14px;font-size:10px;color:var(--muted);word-break:break-all;font-family:monospace" id="qr-url"></div>
     <div style="margin-top:12px;font-size:11px;color:var(--muted)">tap outside to close</div>
   </div>
@@ -211,7 +211,6 @@
 <div id="toast"></div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
 // Agent profiles
@@ -361,13 +360,18 @@ function evaluatePolicy(policy, fromId, task) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function start() {
-  const savedId = localStorage.getItem('demo_agent_id');
-  const opts    = { config: { iceServers: ICE_SERVERS } };
-  peer = savedId ? new Peer(savedId, opts) : new Peer(opts);
+  // sessionStorage  → tab-local, survives refresh, unique per tab
+  // localStorage    → preferred custom ID set by user, used as fallback if no session ID
+  const sessionId  = sessionStorage.getItem('demo_peer_id');
+  const preferredId = localStorage.getItem('demo_agent_id');
+  const useId      = sessionId || preferredId || null;
+
+  const opts = { config: { iceServers: ICE_SERVERS } };
+  peer = useId ? new Peer(useId, opts) : new Peer(opts);
 
   peer.on('open', (id) => {
     myAddress = id;
-    localStorage.setItem('demo_agent_id', id);
+    sessionStorage.setItem('demo_peer_id', id);  // lock this tab to this ID
     document.getElementById('dot').className = 'dot ready';
     document.getElementById('my-addr').textContent = id.slice(0,8)+'…'+id.slice(-6);
     document.getElementById('my-id-display').textContent = id;
@@ -389,7 +393,21 @@ function start() {
     });
   });
 
-  peer.on('error', (err) => log('err', 'PeerJS: ' + err.type));
+  peer.on('error', (err) => {
+    if (err.type === 'unavailable-id') {
+      // Another tab/session already holds this ID — get a fresh random one
+      sessionStorage.removeItem('demo_peer_id');
+      log('warn', `ID "${useId?.slice(0,20)}…" is taken by another session — using a new random ID`);
+      toast('Peer ID taken by another tab — assigned a new random ID');
+      peer.destroy();
+      peer = new Peer(opts);
+      peer.on('open',       (id)  => { myAddress = id; sessionStorage.setItem('demo_peer_id', id); document.getElementById('dot').className='dot ready'; document.getElementById('my-addr').textContent=id.slice(0,8)+'…'+id.slice(-6); document.getElementById('my-id-display').textContent=id; document.getElementById('qr-btn').disabled=false; log('sys',`Fallback ID: ${id.slice(0,20)}…`); });
+      peer.on('connection', (conn) => { wire(conn); conn.on('open', () => { knownPeers.set(conn.peer, knownPeers.get(conn.peer) ?? { id:conn.peer, label:conn.peer.slice(0,12)+'…', card:null, connected:true }); knownPeers.get(conn.peer).connected=true; send(conn.peer,{type:'agent_card_request'}); send(conn.peer,{type:'peer_list_request'}); renderPeers(); }); });
+      peer.on('error',      (e)   => log('err', 'PeerJS: ' + e.type));
+    } else {
+      log('err', 'PeerJS: ' + err.type);
+    }
+  });
 }
 
 function wire(conn) {
@@ -671,7 +689,8 @@ function applyCustomId() {
     return;
   }
 
-  localStorage.setItem('demo_agent_id', raw);
+  localStorage.setItem('demo_agent_id', raw);   // remember as preference for future sessions
+  sessionStorage.setItem('demo_peer_id', raw);  // use immediately in this tab
 
   // Reject pending tasks and drop connections — ID change requires a new peer
   for (const [, p] of pendingTasks)
@@ -861,13 +880,13 @@ function copyAddr() {
 // QR code share
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function showQR() {
+function showQR() {
   if (!myAddress) return;
-  const url = `${location.origin}${location.pathname}?connect=${myAddress}`;
+  const url    = `${location.origin}${location.pathname}?connect=${myAddress}`;
+  const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=e2e4ed&bgcolor=13151e&data=${encodeURIComponent(url)}`;
+  document.getElementById('qr-img').src = imgSrc;
   document.getElementById('qr-url').textContent = url;
-  const modal = document.getElementById('qr-modal');
-  modal.style.display = 'flex';
-  await QRCode.toCanvas(document.getElementById('qr-canvas'), url, { width: 200, margin: 1, color: { dark: '#e2e4ed', light: '#13151e' } });
+  document.getElementById('qr-modal').style.display = 'flex';
 }
 
 function hideQR() {
