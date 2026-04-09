@@ -539,7 +539,7 @@ function init(seedIndex = 0) {
 async function send(address, obj) {
   const raw = JSON.stringify(obj);
   log('out', `→ ${shorten(address)}  ${raw.slice(0, 120)}${raw.length > 120 ? '…' : ''}`);
-  await myClient.send(address, raw);
+  await myClient.send(address, raw, { noReply: true });
 }
 
 // ── Incoming tasks ─────────────────────────────────────────────────────────

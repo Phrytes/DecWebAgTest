@@ -673,7 +673,7 @@ function initNKN(seedIndex = 0) {
       const skill = skills[task.skill];
 
       const reply = (state, extra = {}) =>
-        myClient.send(from, JSON.stringify({ type: 'task_update', task: { ...task, state, ...extra } }));
+        myClient.send(from, JSON.stringify({ type: 'task_update', task: { ...task, state, ...extra } }), { noReply: true });
 
       if (!skill) { await reply('failed', { error: `Unknown skill: "${task.skill}"` }); return; }
 
@@ -687,7 +687,7 @@ function initNKN(seedIndex = 0) {
     }
 
     if (message.type === 'agent_card_request') {
-      myClient.send(from, JSON.stringify({ type: 'agent_card_response', card: buildAgentCard() }));
+      myClient.send(from, JSON.stringify({ type: 'agent_card_response', card: buildAgentCard() }), { noReply: true });
       // Show a subtle "connected" message
       document.getElementById('status-pill').classList.remove('hide');
       setTimeout(() => document.getElementById('status-pill').classList.add('hide'), 4000);

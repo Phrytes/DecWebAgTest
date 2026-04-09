@@ -553,7 +553,7 @@ async function sendCmd(skill, params = {}) {
     }
 
     pending.set(id, { resolve, reject, timer: startTimer(), skill, startTimer });
-    myClient.send(displayAddress, JSON.stringify({ type: 'task', task }));
+    myClient.send(displayAddress, JSON.stringify({ type: 'task', task }), { noReply: true });
     log('out', `→ ${skill}(${JSON.stringify(params).slice(0, 60)})`);
   });
 }
@@ -591,7 +591,7 @@ async function connectDisplay() {
   displayAddress = addr;
   log('sys', 'Requesting agent card from display…');
 
-  myClient.send(addr, JSON.stringify({ type: 'agent_card_request' }));
+  myClient.send(addr, JSON.stringify({ type: 'agent_card_request' }), { noReply: true });
 }
 
 function handleCardResponse(from, card) {
