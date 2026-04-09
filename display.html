@@ -275,16 +275,35 @@ function agentCard(address) {
 
 let peer, myAddress;
 const connections = new Map();
+const knownPeers  = new Map();   // id → { id, label, card }
 
 function send(peerId, msg) {
   const conn = connections.get(peerId);
   if (conn?.open) conn.send(JSON.stringify(msg));
 }
 
+function getPeerList(excludeId) {
+  const list = myAddress ? [{ id:myAddress, label:'Display Agent', card:agentCard(myAddress) }] : [];
+  for (const [id, entry] of knownPeers) {
+    if (id !== excludeId) list.push(entry);
+  }
+  return list;
+}
+
+function mergePeers(peers) {
+  for (const p of (peers ?? [])) {
+    if (!p.id || p.id === myAddress) continue;
+    if (!knownPeers.has(p.id)) knownPeers.set(p.id, p);
+  }
+}
+
 function wire(conn) {
   connections.set(conn.peer, conn);
   conn.on('data',  (raw) => handleMessage(conn.peer, typeof raw==='string'?raw:JSON.stringify(raw)));
   conn.on('close', ()    => connections.delete(conn.peer));
+  // Exchange peer lists when the connection is ready
+  const onReady = () => send(conn.peer, { type:'peer_list_request' });
+  if (conn.open) onReady(); else conn.on('open', onReady);
 }
 
 async function handleMessage(from, raw) {
@@ -293,6 +312,16 @@ async function handleMessage(from, raw) {
   if (msg.type === 'agent_card_request') {
     send(from, { type:'agent_card_response', card:agentCard(myAddress) });
     showHud();
+    return;
+  }
+
+  if (msg.type === 'peer_list_request') {
+    send(from, { type:'peer_list_response', peers:getPeerList(from) });
+    return;
+  }
+
+  if (msg.type === 'peer_list_response') {
+    mergePeers(msg.peers);
     return;
   }
 

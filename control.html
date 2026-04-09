@@ -243,7 +243,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 let peer, myAddress, displayConn = null;
-const pending = new Map();
+const pending    = new Map();
+const knownPeers = new Map();   // id → { id, label, card }
+
+function getPeerList(excludeId) {
+  const list = myAddress ? [{ id:myAddress, label:'Control Agent', card:null }] : [];
+  for (const [id, entry] of knownPeers) {
+    if (id !== excludeId) list.push(entry);
+  }
+  return list;
+}
+
+function mergePeers(peers) {
+  for (const p of (peers ?? [])) {
+    if (!p.id || p.id === myAddress) continue;
+    if (!knownPeers.has(p.id)) {
+      knownPeers.set(p.id, p);
+      log('sys', `Discovered peer: ${p.label ?? p.id.slice(0,12)+'…'}`);
+    }
+  }
+}
 
 function start() {
   peer = new Peer({ config:{ iceServers:[
@@ -281,6 +300,7 @@ async function connectDisplay() {
       wireConn(displayConn);
       log('sys', 'Connected — requesting agent card…');
       send({ type:'agent_card_request' });
+      send({ type:'peer_list_request' });
     });
 
     displayConn.on('error', (e) => { log('err', e.message); disconnectDisplay(); });
@@ -292,8 +312,10 @@ async function connectDisplay() {
 function wireConn(conn) {
   conn.on('data', (raw) => {
     const msg = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (msg.type === 'task_update')       handleTaskUpdate(msg.task);
+    if (msg.type === 'task_update')         handleTaskUpdate(msg.task);
     if (msg.type === 'agent_card_response') onCard(conn.peer, msg.card);
+    if (msg.type === 'peer_list_request')   send({ type:'peer_list_response', peers:getPeerList(conn.peer) });
+    if (msg.type === 'peer_list_response')  mergePeers(msg.peers);
   });
 }
 
