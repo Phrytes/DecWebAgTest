@@ -490,7 +490,7 @@ function buildAgentCard() {
 
 function init() {
   setStatus('connecting');
-  myClient = new nkn.Client();
+  myClient = new nkn.Client({ seedRpcServerAddr: 'https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet' });
 
   myClient.on('connect', () => {
     myAddress = myClient.addr;
