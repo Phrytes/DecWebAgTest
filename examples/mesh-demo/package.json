@@ -8,5 +8,8 @@
   "scripts":     { "start": "node index.js" },
   "dependencies": {
     "@decwebag/core": "file:../../packages/core"
+  },
+  "optionalDependencies": {
+    "node-datachannel": "^0.32.2"
   }
 }
