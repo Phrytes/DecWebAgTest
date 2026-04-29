@@ -1,0 +1,20 @@
+{
+  "name":        "@decwebag/integration-tests",
+  "version":     "0.1.0",
+  "description": "Cross-component scenario tests for the @decwebag SDK",
+  "type":        "module",
+  "private":     true,
+  "main":        "src/_harness/index.js",
+  "scripts":     {
+    "test":       "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@decwebag/core":       "file:../core",
+    "@decwebag/pod-client": "file:../pod-client",
+    "@decwebag/relay":      "file:../relay"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
+}
