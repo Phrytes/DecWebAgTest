@@ -17,6 +17,7 @@
     "@decwebag/core": "file:../../packages/core",
     "@decwebag/pod-client": "file:../../packages/pod-client",
     "@decwebag/react-native": "file:../../packages/react-native",
+    "@decwebag/sync-engine": "file:../../packages/sync-engine",
     "@react-native-async-storage/async-storage": "^1.24.0",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
