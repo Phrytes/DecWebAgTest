@@ -9,10 +9,9 @@ export default defineConfig({
   resolve: {
     alias: {
       // Point imports at the local sources so tests run without npm install.
-      // Folio is consumed via its barrel + a couple of subpath imports
-      // (rn/serviceFactory, rn/backgroundTasks); we point each at source.
-      '@decwebag-app/folio/rn/serviceFactory': path.resolve(repoRoot, 'apps/folio/src/rn/serviceFactory.js'),
-      '@decwebag-app/folio/rn/backgroundTasks': path.resolve(repoRoot, 'apps/folio/src/rn/backgroundTasks.js'),
+      // Folio is consumed for the SyncEngine subclass only — the
+      // RN serviceFactory + backgroundTasks moved to
+      // @decwebag/sync-engine-rn 2026-05-08 (Phase 40.2 follow-up).
       '@decwebag-app/folio':                   path.resolve(repoRoot, 'apps/folio/src/index.js'),
       '@decwebag/core':                        path.resolve(repoRoot, 'packages/core/src/index.js'),
       '@decwebag/pod-client':                  path.resolve(repoRoot, 'packages/pod-client/src/index.js'),
