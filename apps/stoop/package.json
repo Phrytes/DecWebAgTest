@@ -23,6 +23,7 @@
     "@decwebag/chat-agent":        "file:../../packages/chat-agent",
     "@decwebag/identity-resolver": "file:../../packages/identity-resolver",
     "@decwebag/item-store":        "file:../../packages/item-store",
+    "@decwebag/local-store":       "file:../../packages/local-store",
     "@decwebag/notifier":          "file:../../packages/notifier",
     "@decwebag/skill-match":       "file:../../packages/skill-match",
     "i18next":                     "^23.15.0",
