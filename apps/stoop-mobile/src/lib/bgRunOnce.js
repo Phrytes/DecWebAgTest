@@ -15,6 +15,10 @@ export {
   setBgRunOnce,
   clearBgRunOnce,
   bgRunOnce,
+  defineBackgroundTask,
+  registerBackgroundFetch,
+  unregisterBackgroundFetch,
+  DEFAULT_BACKGROUND_FETCH_INTERVAL_S,
 } from '@decwebag/sync-engine-rn';
 
 /**
