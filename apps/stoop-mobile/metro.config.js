@@ -65,13 +65,12 @@ module.exports = withDecwebagPreset({
     // skill-builder factory, groupMirror, Agent.js; same
     // platform-shell pattern as folio + folio-mobile, documented in
     // Project Files/conventions/architectural-layering.md).
+    //
+    // NOTE: `@decwebag-app/stoop/lib/geo` and `/locales/*` subpaths
+    // are NOT entries here — Metro silently picks the shorter prefix
+    // when overlapping `extraNodeModules` keys exist (BRING-UP-NOTES
+    // Trap 2).  Use `extraSubpathResolvers` below for those.
     '@decwebag-app/stoop':         path.resolve(repoRoot, 'apps/stoop'),
-    // Stoop's `./lib/geo` subpath export — used by stoop-mobile's
-    // `getCoarseLocationFromGps`.  Metro resolves this manually
-    // because the preset disables `unstable_enablePackageExports`.
-    '@decwebag-app/stoop/lib/geo':    path.resolve(repoRoot, 'apps/stoop/src/lib/geo.js'),
-    '@decwebag-app/stoop/locales/en': path.resolve(repoRoot, 'apps/stoop/locales/en.json'),
-    '@decwebag-app/stoop/locales/nl': path.resolve(repoRoot, 'apps/stoop/locales/nl.json'),
 
     // SDK packages lifted from Stoop in the 2026-05-08 substrate sweep.
     '@decwebag/chat-p2p':          path.resolve(repoRoot, 'packages/chat-p2p'),
@@ -92,4 +91,37 @@ module.exports = withDecwebagPreset({
     '@noble/hashes/crypto':    path.resolve(repoRoot, 'packages/core/node_modules/@noble/hashes/crypto.js'),
     '@noble/hashes/crypto.js': path.resolve(repoRoot, 'packages/core/node_modules/@noble/hashes/crypto.js'),
   },
+
+  // ── Subpath resolvers ────────────────────────────────────────────
+  //
+  // Stoop's `package.json` has `exports` for `./lib/geo` and
+  // `./locales/{en,nl}`, but the preset disables
+  // `unstable_enablePackageExports`, so Metro ignores the exports
+  // field.  We can't add these to `extraNodeModules` either (Trap 2
+  // — overlapping prefixes; the shorter `@decwebag-app/stoop` wins
+  // and Metro then tries `apps/stoop/lib/geo` which doesn't exist —
+  // the real file is at `apps/stoop/src/lib/geo.js`).
+  //
+  // The preset exposes `extraSubpathResolvers` as the documented
+  // escape hatch.  Each resolver runs before Metro's default lookup;
+  // returning `null` falls through to the next resolver / default.
+  extraSubpathResolvers: [
+    (moduleName, repoRoot) => {
+      if (moduleName.startsWith('@decwebag-app/stoop/lib/')) {
+        const sub = moduleName.slice('@decwebag-app/stoop/lib/'.length);
+        return {
+          filePath: path.resolve(repoRoot, 'apps/stoop/src/lib', sub + '.js'),
+          type:     'sourceFile',
+        };
+      }
+      if (moduleName.startsWith('@decwebag-app/stoop/locales/')) {
+        const sub = moduleName.slice('@decwebag-app/stoop/locales/'.length);
+        return {
+          filePath: path.resolve(repoRoot, 'apps/stoop/locales', sub + '.json'),
+          type:     'sourceFile',
+        };
+      }
+      return null;
+    },
+  ],
 });
