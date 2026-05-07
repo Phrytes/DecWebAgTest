@@ -30,11 +30,18 @@ Pending phases (per
 
 - 40.2 ✅ `@decwebag/sync-engine-rn` — done in folio repair.
 - 40.3 ✅ `@decwebag/oidc-session-rn` — done in folio repair.
-- 40.4 — Add `FileSystemAdapter` to `@decwebag/react-native`.
-- 40.5 — Native picker glue (`expo-image-picker` + `expo-image-manipulator`).
-- 40.6 — QR scan via `expo-camera`'s built-in barcode scanning.
-- 40.7 — GPS location via `expo-location`.
-- 40.8 — Background fetch + active-state cadence.
+- 40.4 ✅ Added `FileSystemAdapter` to `@decwebag/react-native`.
+- 40.5 ✅ Native picker glue (`expo-image-picker` + `expo-image-manipulator`),
+  `src/lib/imagePicker.js`.
+- 40.6 ✅ QR scan + render — `src/lib/qrScanner.js` + `src/components/QrCode.js`.
+- 40.7 ✅ GPS via `expo-location` — `src/lib/geo.js` (re-exports cell helpers
+  from `@decwebag-app/stoop/lib/geo`).
+- 40.8 ✅ Background fetch + active-state cadence —
+  `src/lib/bgRunOnce.js` (BG_TASK_NAME = `stoop-mobile-sync-background`)
+  + `src/lib/activeCadence.js` (foreground/background ticker).
+- 40.9 ✅ Native push via Expo — `src/lib/push.js` (`setupPush`,
+  `requestPushPermission`); deep-imports `MobilePushBridge` +
+  `ExpoNotificationsAdapter` from `@decwebag/react-native`.
 - 40.9 — Native push via Expo.
 - 40.10 — UI screens (the biggest single phase).
 - 40.11 — Deep-link handling for `stoop://...` URLs.
