@@ -21,6 +21,7 @@
     "@decwebag/relay":             "file:../../packages/relay",
     "@decwebag/agent-ui":          "file:../../packages/agent-ui",
     "@decwebag/chat-agent":        "file:../../packages/chat-agent",
+    "@decwebag/chat-p2p":          "file:../../packages/chat-p2p",
     "@decwebag/identity-resolver": "file:../../packages/identity-resolver",
     "@decwebag/item-store":        "file:../../packages/item-store",
     "@decwebag/local-store":       "file:../../packages/local-store",

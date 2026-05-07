@@ -1,0 +1,31 @@
+{
+  "name": "@decwebag/chat-p2p",
+  "version": "0.1.0",
+  "description": "Peer-to-peer chat over agent.transport.sendOneWay. Lifted from apps/stoop/src/chat/wireChat.js 2026-05-08 (Tasks V1 = rule-of-two consumer). Distinct from @decwebag/chat-agent (LLM-mediated chat).",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@decwebag/core": "^0.1.0",
+    "@decwebag/identity-resolver": "^0.1.0",
+    "@decwebag/item-store": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@decwebag/identity-resolver": { "optional": true },
+    "@decwebag/item-store":        { "optional": true }
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@decwebag/core": "file:../core",
+    "@decwebag/identity-resolver": "file:../identity-resolver",
+    "vitest": "^2.1.9"
+  }
+}
