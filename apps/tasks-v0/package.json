@@ -5,20 +5,32 @@
   "description": "H4 tasks-v0 — single-household task ledger with DAG dependencies + skill-based dispatch + role-aware governance.  Phase C V0; thin composition of L1b/L1d/L1e/L1f/L1h substrates.",
   "type": "module",
   "main": "src/index.js",
-  "exports": { ".": "./src/index.js" },
-  "bin": { "tasks-ui": "bin/tasks-ui.js" },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "tasks-ui": "bin/tasks-ui.js"
+  },
   "scripts": {
-    "test":       "vitest run",
+    "test": "vitest run",
     "test:watch": "vitest",
-    "ui":         "node bin/tasks-ui.js"
+    "ui": "node bin/tasks-ui.js"
   },
   "dependencies": {
-    "@decwebag/core":             "file:../../packages/core",
-    "@decwebag/item-store":       "file:../../packages/item-store",
-    "@decwebag/agent-ui":         "file:../../packages/agent-ui",
-    "@decwebag/skill-match":      "file:../../packages/skill-match",
-    "@decwebag/notifier":         "file:../../packages/notifier",
-    "@decwebag/identity-resolver":"file:../../packages/identity-resolver"
+    "@decwebag/agent-ui": "file:../../packages/agent-ui",
+    "@decwebag/chat-agent": "file:../../packages/chat-agent",
+    "@decwebag/chat-p2p": "file:../../packages/chat-p2p",
+    "@decwebag/core": "file:../../packages/core",
+    "@decwebag/identity-resolver": "file:../../packages/identity-resolver",
+    "@decwebag/item-store": "file:../../packages/item-store",
+    "@decwebag/local-store": "file:../../packages/local-store",
+    "@decwebag/notifier": "file:../../packages/notifier",
+    "@decwebag/relay": "file:../../packages/relay",
+    "@decwebag/skill-match": "file:../../packages/skill-match",
+    "i18next": "^26.0.10",
+    "ical.js": "^2.2.1"
   },
-  "devDependencies": { "vitest": "^2.1.0" }
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
 }
