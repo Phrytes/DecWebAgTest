@@ -26,8 +26,17 @@ export default defineConfig({
       // bridge bits in `src/lib/push.js` to avoid pulling the barrel
       // (which transitively imports `react-native-keychain` — a TS file).
       '@decwebag/react-native/src':            path.resolve(repoRoot, 'packages/react-native/src'),
+      '@decwebag/react-native/picker':         path.resolve(repoRoot, 'packages/react-native/src/picker/index.js'),
+      '@decwebag/react-native/qr/view':        path.resolve(repoRoot, 'packages/react-native/src/qr/QrCodeView.jsx'),
+      '@decwebag/react-native/qr':             path.resolve(repoRoot, 'packages/react-native/src/qr/index.js'),
+      '@decwebag/react-native/mnemonic/view':  path.resolve(repoRoot, 'packages/react-native/src/mnemonic/MnemonicView.jsx'),
+      '@decwebag/react-native/mnemonic':       path.resolve(repoRoot, 'packages/react-native/src/mnemonic/index.js'),
+      '@decwebag/react-native/push':           path.resolve(repoRoot, 'packages/react-native/src/push/index.js'),
+      '@decwebag/react-native/i18n':           path.resolve(repoRoot, 'packages/react-native/src/i18n/index.js'),
       '@decwebag/react-native':                path.resolve(repoRoot, 'packages/react-native/index.js'),
+      '@decwebag/sync-engine-rn/react':        path.resolve(repoRoot, 'packages/sync-engine-rn/src/react/index.js'),
       '@decwebag/sync-engine-rn':              path.resolve(repoRoot, 'packages/sync-engine-rn/index.js'),
+      '@decwebag/online-cadence':              path.resolve(repoRoot, 'packages/online-cadence/index.js'),
       '@decwebag/oidc-session-rn/hook':        path.resolve(repoRoot, 'packages/oidc-session-rn/hook.js'),
       '@decwebag/oidc-session-rn':             path.resolve(repoRoot, 'packages/oidc-session-rn/index.js'),
       '@decwebag/local-store':                 path.resolve(repoRoot, 'packages/local-store/index.js'),

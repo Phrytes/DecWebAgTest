@@ -21,6 +21,7 @@
     "@decwebag/local-store": "file:../../packages/local-store",
     "@decwebag/notifier": "file:../../packages/notifier",
     "@decwebag/oidc-session-rn": "file:../../packages/oidc-session-rn",
+    "@decwebag/online-cadence": "file:../../packages/online-cadence",
     "@decwebag/pod-client": "file:../../packages/pod-client",
     "@decwebag/react-native": "file:../../packages/react-native",
     "@decwebag/skill-match": "file:../../packages/skill-match",
