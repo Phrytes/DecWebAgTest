@@ -26,6 +26,12 @@ export default defineConfig({
       // bridge bits in `src/lib/push.js` to avoid pulling the barrel
       // (which transitively imports `react-native-keychain` — a TS file).
       '@decwebag/react-native/src':            path.resolve(repoRoot, 'packages/react-native/src'),
+      '@decwebag/react-native/identity/bootstrap': path.resolve(repoRoot, 'packages/react-native/src/identity/bootstrapIdentity.js'),
+      '@decwebag/react-native/identity':       path.resolve(repoRoot, 'packages/react-native/src/identity/index.js'),
+      '@decwebag/react-native/storage':        path.resolve(repoRoot, 'packages/react-native/src/storage/index.js'),
+      '@decwebag/react-native/deepLinks':      path.resolve(repoRoot, 'packages/react-native/src/deepLinks/index.js'),
+      '@decwebag/react-native/theme':          path.resolve(repoRoot, 'packages/react-native/src/theme/index.js'),
+      '@decwebag/react-native/components':     path.resolve(repoRoot, 'packages/react-native/src/components/index.js'),
       '@decwebag/react-native/picker':         path.resolve(repoRoot, 'packages/react-native/src/picker/index.js'),
       '@decwebag/react-native/qr/view':        path.resolve(repoRoot, 'packages/react-native/src/qr/QrCodeView.jsx'),
       '@decwebag/react-native/qr':             path.resolve(repoRoot, 'packages/react-native/src/qr/index.js'),
@@ -40,6 +46,8 @@ export default defineConfig({
       '@decwebag/oidc-session-rn/hook':        path.resolve(repoRoot, 'packages/oidc-session-rn/hook.js'),
       '@decwebag/oidc-session-rn':             path.resolve(repoRoot, 'packages/oidc-session-rn/index.js'),
       '@decwebag/local-store':                 path.resolve(repoRoot, 'packages/local-store/index.js'),
+      '@decwebag/identity-resolver/display':   path.resolve(repoRoot, 'packages/identity-resolver/src/display.js'),
+      '@decwebag/identity-resolver/skills':    path.resolve(repoRoot, 'packages/identity-resolver/src/skills.js'),
       '@decwebag/identity-resolver':           path.resolve(repoRoot, 'packages/identity-resolver/src/index.js'),
       '@decwebag/item-store':                  path.resolve(repoRoot, 'packages/item-store/src/index.js'),
       '@decwebag/notifier':                    path.resolve(repoRoot, 'packages/notifier/src/index.js'),
@@ -58,6 +66,17 @@ export default defineConfig({
       // it; under vitest we stub.
       'chokidar':                          path.resolve(__dirname, 'test/stubs/chokidar.js'),
     },
+  },
+  // JSX-in-.jsx loader — substrate components/* + qr/view + mnemonic/view
+  // all use .jsx; Stoop's components/* are .js shims that re-export the
+  // substrate JSX through the alias above (so loading them transitively
+  // pulls in the .jsx files which need this loader).
+  esbuild: {
+    loader: 'jsx',
+    include: [
+      /apps\/stoop-mobile\/src\/components\/.*\.jsx?$/,
+      /packages\/react-native\/src\/(qr|mnemonic|components)\/.*\.jsx?$/,
+    ],
   },
   test: {
     environment: 'node',
