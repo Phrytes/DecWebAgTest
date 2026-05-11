@@ -1,0 +1,22 @@
+{
+  "name": "@decwebag/pod-routing",
+  "version": "0.1.0",
+  "description": "Storage-function → URI mapping. Reads canonical config from a pod or pseudo-pod resource; resolves per user policy with default fall-back. Plus a per-write reachability cache for graceful degradation. Standardisation Phase 52.3.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@decwebag/pseudo-pod": "*"
+  },
+  "devDependencies": {
+    "@decwebag/core":       "file:../core",
+    "@decwebag/pseudo-pod": "file:../pseudo-pod",
+    "vitest": "^2.1.9"
+  }
+}
