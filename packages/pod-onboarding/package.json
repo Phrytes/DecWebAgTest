@@ -1,0 +1,29 @@
+{
+  "name": "@decwebag/pod-onboarding",
+  "version": "0.1.0",
+  "description": "One-tap pod provisioning + mnemonic-restore. Orchestration layer; provider-specific pod-server calls are injected via a podProvisioner. Standardisation Phase 52.5.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@decwebag/core":            "*",
+    "@decwebag/pod-routing":     "*",
+    "@decwebag/pseudo-pod":      "*",
+    "@decwebag/vault":           "*",
+    "@decwebag/webid-discovery": "*"
+  },
+  "devDependencies": {
+    "@decwebag/core":            "file:../core",
+    "@decwebag/pod-routing":     "file:../pod-routing",
+    "@decwebag/pseudo-pod":      "file:../pseudo-pod",
+    "@decwebag/vault":           "file:../vault",
+    "@decwebag/webid-discovery": "file:../webid-discovery",
+    "vitest": "^2.1.9"
+  }
+}
