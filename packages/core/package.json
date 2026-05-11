@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@decwebag/oidc-session": "file:../oidc-session",
-    "@decwebag/webid-discovery": "file:../webid-discovery",
     "@inrupt/solid-client": "3.0.0",
     "@inrupt/solid-client-authn-node": "4.0.0",
     "@noble/hashes": "^2.2.0",
