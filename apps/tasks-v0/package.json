@@ -23,6 +23,7 @@
     "@decwebag/core": "file:../../packages/core",
     "@decwebag/identity-resolver": "file:../../packages/identity-resolver",
     "@decwebag/item-store": "file:../../packages/item-store",
+    "@decwebag/item-types": "file:../../packages/item-types",
     "@decwebag/local-store": "file:../../packages/local-store",
     "@decwebag/notifier": "file:../../packages/notifier",
     "@decwebag/relay": "file:../../packages/relay",
