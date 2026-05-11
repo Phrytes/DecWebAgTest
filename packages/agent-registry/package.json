@@ -1,0 +1,23 @@
+{
+  "name": "@decwebag/agent-registry",
+  "version": "0.1.0",
+  "description": "Canonical agent registry — the user's agents listed in one pod resource. Implements core's ActorResolver. Etag-based optimistic concurrency. Standardisation Phase 52.10.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@decwebag/core":       "*",
+    "@decwebag/pseudo-pod": "*"
+  },
+  "devDependencies": {
+    "@decwebag/core":       "file:../core",
+    "@decwebag/pseudo-pod": "file:../pseudo-pod",
+    "vitest": "^2.1.9"
+  }
+}
