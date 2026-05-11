@@ -29,6 +29,7 @@
     "@decwebag/chat-p2p":          "file:../../packages/chat-p2p",
     "@decwebag/identity-resolver": "file:../../packages/identity-resolver",
     "@decwebag/item-store":        "file:../../packages/item-store",
+    "@decwebag/item-types":        "file:../../packages/item-types",
     "@decwebag/local-store":       "file:../../packages/local-store",
     "@decwebag/notifier":          "file:../../packages/notifier",
     "@decwebag/skill-match":       "file:../../packages/skill-match",
