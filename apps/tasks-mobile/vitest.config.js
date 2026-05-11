@@ -28,8 +28,16 @@ export default defineConfig({
       '@decwebag-app/tasks-v0/wireSkills':      path.resolve(repoRoot, 'apps/tasks-v0/src/wireSkills.js'),
       '@decwebag-app/tasks-v0/bundleResolver':  path.resolve(repoRoot, 'apps/tasks-v0/src/bundleResolver.js'),
       '@decwebag-app/tasks-v0/Crew':            path.resolve(repoRoot, 'apps/tasks-v0/src/Crew.js'),
-      '@decwebag-app/tasks-v0/locales/en':      path.resolve(repoRoot, 'apps/tasks-v0/locales/en.json'),
-      '@decwebag-app/tasks-v0/locales/nl':      path.resolve(repoRoot, 'apps/tasks-v0/locales/nl.json'),
+      '@decwebag-app/tasks-v0/locales/en':            path.resolve(repoRoot, 'apps/tasks-v0/locales/en.json'),
+      '@decwebag-app/tasks-v0/locales/nl':            path.resolve(repoRoot, 'apps/tasks-v0/locales/nl.json'),
+      '@decwebag-app/tasks-v0/locales/shared/en':     path.resolve(repoRoot, 'apps/tasks-v0/locales/shared/en.json'),
+      '@decwebag-app/tasks-v0/locales/shared/nl':     path.resolve(repoRoot, 'apps/tasks-v0/locales/shared/nl.json'),
+      // Shared UI helpers (lifted 2026-05-10 per
+      // Project Files/conventions/architectural-layering.md §
+      // "Shared UI-glue helpers between platform shells"). Mirrors
+      // the metro.config.js subpath resolver. Vite's prefix matcher
+      // is greedy-longest so `/ui/<sub>` resolves before `/ui` alone.
+      '@decwebag-app/tasks-v0/ui':              path.resolve(repoRoot, 'apps/tasks-v0/src/ui'),
       '@decwebag-app/tasks-v0':                 path.resolve(repoRoot, 'apps/tasks-v0/src/index.js'),
 
       // SDK packages — point at sources, not node_modules.
