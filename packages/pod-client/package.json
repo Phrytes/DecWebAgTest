@@ -14,7 +14,14 @@
   "dependencies": {
     "@decwebag/core": "file:../core"
   },
+  "peerDependencies": {
+    "@decwebag/pseudo-pod": "*"
+  },
+  "peerDependenciesMeta": {
+    "@decwebag/pseudo-pod": { "optional": true }
+  },
   "devDependencies": {
+    "@decwebag/pseudo-pod": "file:../pseudo-pod",
     "vitest": "^2.1.0"
   }
 }
