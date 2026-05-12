@@ -10,9 +10,20 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@decwebag/core":       "file:../core",
-    "@decwebag/pod-client": "file:../pod-client",
-    "@decwebag/relay":      "file:../relay"
+    "@decwebag/core":              "file:../core",
+    "@decwebag/pod-client":        "file:../pod-client",
+    "@decwebag/relay":             "file:../relay",
+
+    "@decwebag/agent-provisioning": "file:../agent-provisioning",
+    "@decwebag/agent-registry":     "file:../agent-registry",
+    "@decwebag/identity-resolver":  "file:../identity-resolver",
+    "@decwebag/item-store":         "file:../item-store",
+    "@decwebag/item-types":         "file:../item-types",
+    "@decwebag/notify-envelope":    "file:../notify-envelope",
+    "@decwebag/pod-onboarding":     "file:../pod-onboarding",
+    "@decwebag/pod-routing":        "file:../pod-routing",
+    "@decwebag/pseudo-pod":         "file:../pseudo-pod",
+    "@decwebag/vault":              "file:../vault"
   },
   "devDependencies": {
     "vitest": "^2.1.0"
