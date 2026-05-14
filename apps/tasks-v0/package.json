@@ -17,7 +17,9 @@
     "ui": "node bin/tasks-ui.js"
   },
   "dependencies": {
+    "@decwebag/agent-registry": "file:../../packages/agent-registry",
     "@decwebag/agent-ui": "file:../../packages/agent-ui",
+    "@decwebag/pseudo-pod": "file:../../packages/pseudo-pod",
     "@decwebag/chat-agent": "file:../../packages/chat-agent",
     "@decwebag/chat-p2p": "file:../../packages/chat-p2p",
     "@decwebag/core": "file:../../packages/core",
