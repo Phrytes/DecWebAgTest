@@ -24,6 +24,7 @@
   "dependencies": {
     "@decwebag/core":              "file:../../packages/core",
     "@decwebag/relay":             "file:../../packages/relay",
+    "@decwebag/agent-registry":    "file:../../packages/agent-registry",
     "@decwebag/agent-ui":          "file:../../packages/agent-ui",
     "@decwebag/chat-agent":        "file:../../packages/chat-agent",
     "@decwebag/chat-p2p":          "file:../../packages/chat-p2p",
@@ -32,6 +33,10 @@
     "@decwebag/item-types":        "file:../../packages/item-types",
     "@decwebag/local-store":       "file:../../packages/local-store",
     "@decwebag/notifier":          "file:../../packages/notifier",
+    "@decwebag/notify-envelope":   "file:../../packages/notify-envelope",
+    "@decwebag/oidc-session":      "file:../../packages/oidc-session",
+    "@decwebag/pod-routing":       "file:../../packages/pod-routing",
+    "@decwebag/pseudo-pod":        "file:../../packages/pseudo-pod",
     "@decwebag/skill-match":       "file:../../packages/skill-match",
     "i18next":                     "^23.15.0",
     "tweetnacl":                   "^1.0.3"
