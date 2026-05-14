@@ -28,6 +28,7 @@
     "@decwebag/item-types": "file:../../packages/item-types",
     "@decwebag/local-store": "file:../../packages/local-store",
     "@decwebag/notifier": "file:../../packages/notifier",
+    "@decwebag/oidc-session": "file:../../packages/oidc-session",
     "@decwebag/relay": "file:../../packages/relay",
     "@decwebag/skill-match": "file:../../packages/skill-match",
     "i18next": "^26.0.10",
