@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@decwebag/core":                    "file:../../packages/core",
+    "@decwebag/oidc-session":            "file:../../packages/oidc-session",
     "@decwebag/pod-client":              "file:../../packages/pod-client",
     "@decwebag/sync-engine":             "file:../../packages/sync-engine",
     "@decwebag/sync-engine-rn":          "file:../../packages/sync-engine-rn",
